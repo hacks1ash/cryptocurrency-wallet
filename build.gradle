@@ -1,0 +1,134 @@
+import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
+buildscript {
+
+    repositories {
+        mavenLocal()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.5.2"
+    }
+}
+
+plugins {
+    id 'idea'
+}
+
+group = projectGroup
+version = projectVersion
+
+
+idea {
+    module {
+        excludeDirs = [file(".gradle"), file(".build"), file(".idea"), file(".out"), file(".docs")]
+    }
+}
+
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://packages.confluent.io/maven/' }
+    }
+}
+
+subprojects {
+
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'org.springframework.boot'
+
+
+    buildDir = new File(rootProject.projectDir, '.build/' + project.name)
+
+    apply plugin: 'idea'
+
+    idea {
+        module {
+            outputDir = new File(rootProject.projectDir, '.out')
+            testOutputDir = new File(rootProject.projectDir, '.out')
+        }
+    }
+
+    if (!file('build.gradle').exists()) {
+        return
+    }
+
+    apply plugin: 'java'
+
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = projectSourceCompatibility
+        targetCompatibility = projectSourceCompatibility
+    }
+
+    configurations {
+
+        // Tests
+        springBootStarterTest
+
+        // Spring
+        springWeb
+        springData
+        springWebsocket
+        springActuator
+        springMail
+        springDevtools
+        springAOP
+        springKafka
+        springDocs
+
+        lombok
+
+        tomcat
+
+        // Third-Party
+        bitcoinJ
+        guava
+    }
+
+    dependencies {
+
+        // Spring
+        springWeb 'org.springframework.boot:spring-boot-starter-web'
+        springData 'org.springframework.boot:spring-boot-starter-data-mongodb'
+        springWebsocket 'org.springframework.boot:spring-boot-starter-websocket'
+        springActuator 'org.springframework.boot:spring-boot-starter-actuator'
+        springMail 'org.springframework.boot:spring-boot-starter-mail'
+        springDevtools 'org.springframework.boot:spring-boot-devtools'
+        springAOP 'org.springframework.boot:spring-boot-starter-aop'
+        springKafka 'org.springframework.kafka:spring-kafka'
+        springDocs 'org.springdoc:springdoc-openapi-ui:1.5.2'
+
+        // Lombok
+        lombok 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        tomcat 'org.springframework.boot:spring-boot-starter-tomcat'
+
+        // Third-Party
+        bitcoinJ 'org.bitcoinj:bitcoinj-core:0.15.10'
+        guava 'com.google.guava:guava:30.1.1-jre'
+
+        // Testing
+        springBootStarterTest('org.springframework.boot:spring-boot-starter-test') {
+            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        }
+
+        annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom SpringBootPlugin.BOM_COORDINATES
+        }
+    }
+
+    compileJava.inputs.files(processResources)
+
+    test {
+        useJUnitPlatform()
+    }
+
+}

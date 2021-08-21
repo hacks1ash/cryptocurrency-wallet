@@ -1,0 +1,26 @@
+plugins {
+    id 'java-library'
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+group 'com.hacks1ash.crypto.wallet'
+
+dependencies {
+    compileOnly project(':system-core')
+}
+
+configurations {
+
+    testImplementation.extendsFrom(junit)
+
+    compileOnly.extendsFrom(springWeb)
+    compileOnly.extendsFrom(springWebsocket)
+    compileOnly.extendsFrom(lombok)
+}

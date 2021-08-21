@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+}
+
+bootJar {
+    mainClass.set("com.hacks1ash.crypto.wallet.RestApplication")
+}
+
+dependencies {
+    implementation project(':system-core')
+    implementation project(':blockchain-integration')
+    implementation project(':controller')
+}
+
+configurations {
+
+    testImplementation.extendsFrom(springBootStarterTest)
+
+    developmentOnly.extendsFrom(springDevtools)
+
+    implementation.extendsFrom(springWeb)
+    implementation.extendsFrom(springData)
+    implementation.extendsFrom(springWebsocket)
+    implementation.extendsFrom(springActuator)
+    implementation.extendsFrom(springMail)
+    implementation.extendsFrom(springDevtools)
+    implementation.extendsFrom(springAOP)
+    implementation.extendsFrom(springKafka)
+    implementation.extendsFrom(springDocs)
+
+    implementation.extendsFrom(lombok)
+    providedRuntime.extendsFrom(tomcat)
+
+
+    implementation.extendsFrom(bitcoinJ)
+    implementation.extendsFrom(guava)
+}

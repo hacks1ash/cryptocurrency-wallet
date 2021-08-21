@@ -1,0 +1,33 @@
+# Service Config
+server:
+  address: 0.0.0.0
+  port: 8080
+  shutdown: graceful
+  servlet:
+    context-path: /api
+
+# MongoDB Config
+spring:
+  data:
+    mongodb:
+      uri: mongodb+srv://${DATABASE_USER}:${DATABASE_PASS}@${DATABASE_HOST}/${DATABASE_NAME}?retryWrites=true&w=majority
+      auto-index-creation: false
+
+
+# Swagger
+springdoc:
+  api-docs:
+    enabled: true
+    path: docs
+  swagger-ui:
+    path: swagger
+    operations-sorter: method
+  show-actuator: true
+
+# Nodes
+bitcoin:
+  rpcScheme: http
+  rpcHost: 3.68.186.140
+  rpcPort: 18332
+  rpcUsername: bitcoinNode
+  rpcPassword: bitcoinPassword

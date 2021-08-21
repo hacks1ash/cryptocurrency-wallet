@@ -1,0 +1,49 @@
+package com.hacks1ash.crypto.wallet.rest;
+
+import com.hacks1ash.crypto.wallet.core.WalletManager;
+import com.hacks1ash.crypto.wallet.core.model.request.AddressCreationRequest;
+import com.hacks1ash.crypto.wallet.core.model.request.WalletCreationRequest;
+import com.hacks1ash.crypto.wallet.core.model.response.AddressResponse;
+import com.hacks1ash.crypto.wallet.core.model.response.WalletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigInteger;
+import java.util.List;
+
+@RestController
+@RequestMapping(value = "wallet")
+public class WalletController {
+
+  private WalletManager walletManager;
+
+  @PostMapping
+  public WalletResponse createWallet(@RequestBody WalletCreationRequest request) {
+    return walletManager.createWallet(request);
+  }
+
+  @GetMapping
+  public List<WalletResponse> listWallets() {
+    return walletManager.listWallets();
+  }
+
+  @RequestMapping(value = "/{walletId}/balance", method = RequestMethod.GET)
+  public BigInteger getBalance(@PathVariable String walletId) {
+    return walletManager.getBalance(walletId);
+  }
+
+  @RequestMapping(value = "/{walletId}/address", method = RequestMethod.POST)
+  public AddressResponse createAddress(@PathVariable String walletId, @RequestBody AddressCreationRequest request) {
+    return walletManager.createAddress(walletId, request);
+  }
+
+  @RequestMapping(value = "/{walletId}/address", method = RequestMethod.GET)
+  public List<AddressResponse> getAddresses(@PathVariable String walletId) {
+    return walletManager.getAddresses(walletId);
+  }
+
+  @Autowired
+  public void setWalletManager(WalletManager walletManager) {
+    this.walletManager = walletManager;
+  }
+}
