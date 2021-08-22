@@ -5,6 +5,7 @@ server:
   shutdown: graceful
   servlet:
     context-path: /api
+  forward-headers-strategy: native
 
 # GraphQL
 graphql:
