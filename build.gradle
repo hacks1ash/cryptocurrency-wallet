@@ -9,7 +9,7 @@ buildscript {
 
     dependencies {
         classpath "io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE"
-        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.5.2"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.5.4"
     }
 }
 
@@ -86,6 +86,7 @@ subprojects {
         // Third-Party
         bitcoinJ
         guava
+        graphql
     }
 
     dependencies {
@@ -110,6 +111,10 @@ subprojects {
         // Third-Party
         bitcoinJ 'org.bitcoinj:bitcoinj-core:0.15.10'
         guava 'com.google.guava:guava:30.1.1-jre'
+        graphql 'com.graphql-java:graphiql-spring-boot-starter:5.0.2'
+        graphql 'com.graphql-java:graphql-spring-boot-starter:5.0.2'
+        graphql 'com.graphql-java:graphql-java-tools:5.2.4'
+        graphql 'com.graphql-java:graphql-java:8.0'
 
         // Testing
         springBootStarterTest('org.springframework.boot:spring-boot-starter-test') {

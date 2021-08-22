@@ -31,7 +31,7 @@ configurations {
     implementation.extendsFrom(lombok)
     providedRuntime.extendsFrom(tomcat)
 
-
     implementation.extendsFrom(bitcoinJ)
     implementation.extendsFrom(guava)
+    implementation.extendsFrom(graphql)
 }

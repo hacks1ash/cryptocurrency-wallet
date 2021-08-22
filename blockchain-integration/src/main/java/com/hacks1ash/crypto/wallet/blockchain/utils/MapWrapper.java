@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class MapWrapper implements MapWrapperType {
 
-  public final Map<String, ?> m;
+  protected final Map<String, ?> m;
 
   protected MapWrapper(Map<String, ?> m) {
     this.m = m;

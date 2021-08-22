@@ -4,32 +4,28 @@ import com.hacks1ash.crypto.wallet.blockchain.GenericRpcException;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.CreateWalletRequest;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.GetBalanceRequest;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.ImportPrivateKeyRequest;
+import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.GetTransactionRequest;
+import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.FundRawTransactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.GetTrasactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.SignRawTransactionWithWalletResponse;
 import com.hacks1ash.crypto.wallet.core.WalletException;
 import com.hacks1ash.crypto.wallet.core.WalletManager;
 import com.hacks1ash.crypto.wallet.core.model.Address;
+import com.hacks1ash.crypto.wallet.core.model.AddressType;
 import com.hacks1ash.crypto.wallet.core.model.CryptoCurrency;
 import com.hacks1ash.crypto.wallet.core.model.request.AddressCreationRequest;
 import com.hacks1ash.crypto.wallet.core.model.request.TransactionRequest;
 import com.hacks1ash.crypto.wallet.core.model.request.WalletCreationRequest;
-import com.hacks1ash.crypto.wallet.core.model.response.AddressResponse;
-import com.hacks1ash.crypto.wallet.core.model.response.EstimateFeeResponse;
-import com.hacks1ash.crypto.wallet.core.model.response.SendTransactionResponse;
-import com.hacks1ash.crypto.wallet.core.model.response.WalletResponse;
+import com.hacks1ash.crypto.wallet.core.model.response.*;
 import com.hacks1ash.crypto.wallet.core.storage.WalletRepository;
 import com.hacks1ash.crypto.wallet.core.storage.document.Wallet;
 import com.hacks1ash.crypto.wallet.core.utils.BlockchainIntegrationFactory;
 import com.hacks1ash.crypto.wallet.core.utils.CurrencyUtils;
 import com.hacks1ash.crypto.wallet.core.utils.MnemonicWords;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.LegacyAddress;
+import com.hacks1ash.crypto.wallet.core.utils.WalletUtils;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.HDKeyDerivation;
-import org.bitcoinj.script.Script;
-import org.bitcoinj.script.ScriptBuilder;
-import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -65,15 +61,26 @@ public class WalletManagerBean implements WalletManager {
         }
       }
       long creationTimestamp = Instant.now().getEpochSecond();
-      new DeterministicSeed(hdSeed, null, "", creationTimestamp);
+      DeterministicSeed masterSeed = new DeterministicSeed(hdSeed, null, "", creationTimestamp);
+      byte[] seed = Objects.requireNonNull(masterSeed.getSeedBytes());
+      DeterministicKey masterPrivateKey = HDKeyDerivation.createMasterPrivateKey(seed);
 
       String nodeWalletName = UUID.randomUUID().toString();
-
       try {
         rpcClient.createWallet(new CreateWalletRequest(nodeWalletName));
       } catch (GenericRpcException ex) {
         throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
       }
+
+      String changeAddress = WalletUtils.createAddress(
+        rpcClient,
+        nodeWalletName,
+        masterPrivateKey,
+        "Change Address",
+        AddressType.P2SH,
+        cryptoCurrency.getNetworkParameters(),
+        0
+      );
 
       Wallet wallet = walletRepository.save(
         new Wallet(
@@ -82,7 +89,8 @@ public class WalletManagerBean implements WalletManager {
           cryptoCurrency,
           hdSeed,
           creationTimestamp,
-          new ArrayList<>()
+          new ArrayList<>(),
+          changeAddress
         )
       );
 
@@ -121,44 +129,21 @@ public class WalletManagerBean implements WalletManager {
       synchronized (wallet) {
         NetworkParameters networkParameters = wallet.getCurrency().getNetworkParameters();
         UTXORPCClient rpcClient = blockchainFactory.getRPCClient(wallet.getCurrency());
-        int addressIndex = wallet.getAddresses().size();
+        // Addition of 1 is needed because of change address, that is generated on 0 index at wallet creation
+        int addressIndex = wallet.getAddresses().size() + 1;
         DeterministicSeed masterSeed = new DeterministicSeed(wallet.getHdSeed(), null, "", wallet.getCreationTimestamp());
         byte[] seed = Objects.requireNonNull(masterSeed.getSeedBytes());
         DeterministicKey masterPrivateKey = HDKeyDerivation.createMasterPrivateKey(seed);
 
-        DeterministicKey deterministicKey = HDKeyDerivation.deriveChildKey(masterPrivateKey, addressIndex);
-        ECKey ecKey = ECKey.fromPrivate(deterministicKey.getPrivKey());
-
-        String address;
-        switch (request.getAddressType()) {
-          case P2PKH:
-            address = LegacyAddress.fromKey(networkParameters, ecKey).toString();
-            break;
-          case BECH_32:
-            address = SegwitAddress.fromKey(networkParameters, ecKey, Script.ScriptType.P2WPKH).toString();
-            break;
-          case DEFAULT:
-          case P2SH:
-          default:
-            Script redeemScript = ScriptBuilder.createP2WPKHOutputScript(ecKey);
-            Script script = ScriptBuilder.createP2SHOutputScript(redeemScript);
-            byte[] scriptHash = ScriptPattern.extractHashFromP2SH(script);
-            address = LegacyAddress.fromScriptHash(networkParameters, scriptHash).toString();
-            break;
-        }
-
-        try {
-          rpcClient.importPrivateKey(
-            new ImportPrivateKeyRequest(
-              wallet.getNodeWalletNameAlias(),
-              deterministicKey.getPrivateKeyAsWiF(networkParameters),
-              request.getName(),
-              false
-            )
-          );
-        } catch (GenericRpcException ex) {
-          throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
-        }
+        String address = WalletUtils.createAddress(
+          rpcClient,
+          wallet.getNodeWalletNameAlias(),
+          masterPrivateKey,
+          request.getName(),
+          request.getAddressType(),
+          networkParameters,
+          addressIndex
+        );
 
         wallet.getAddresses().add(new Address(request.getName(), address, request.getAddressType(), addressIndex));
         walletRepository.save(wallet);
@@ -183,12 +168,57 @@ public class WalletManagerBean implements WalletManager {
 
   @Override
   public EstimateFeeResponse estimateFee(String walletId, TransactionRequest request) {
-    return null;
+    Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
+    if (optionalWallet.isPresent()) {
+      Wallet wallet = optionalWallet.get();
+      synchronized (wallet) {
+        CryptoCurrency currency = wallet.getCurrency();
+        UTXORPCClient rpcClient = blockchainFactory.getRPCClient(currency);
+        try {
+          FundRawTransactionResponse fundRawTransactionResponse = WalletUtils.fundRawTransaction(request, wallet, currency, rpcClient);
+          return new EstimateFeeResponse(CurrencyUtils.toMinorUnit(currency, fundRawTransactionResponse.getFee()), request.getFeePerSatoshi(), currency.getFeeUnit());
+        } catch (GenericRpcException ex) {
+          throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
+        }
+      }
+    }
+    throw new WalletException.WalletNotFound(walletId);
   }
 
   @Override
   public SendTransactionResponse sendTransaction(String walletId, TransactionRequest request) {
-    return null;
+    Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
+    if (optionalWallet.isPresent()) {
+      Wallet wallet = optionalWallet.get();
+      CryptoCurrency currency = wallet.getCurrency();
+      UTXORPCClient rpcClient = blockchainFactory.getRPCClient(currency);
+      synchronized (wallet) {
+        try {
+          FundRawTransactionResponse fundRawTransactionResponse = WalletUtils.fundRawTransaction(request, wallet, currency, rpcClient);
+          SignRawTransactionWithWalletResponse singRawTransactionWithWallet = rpcClient.singRawTransactionWithWallet(wallet.getNodeWalletNameAlias(), fundRawTransactionResponse.getHex());
+          String finalTxId = rpcClient.sendRawTransaction(singRawTransactionWithWallet.getTxHex());
+          return new SendTransactionResponse(finalTxId, request.getRecipients(), BigInteger.ZERO, currency.getFeeUnit());
+        } catch (GenericRpcException ex) {
+          throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
+        }
+      }
+    }
+    throw new WalletException.WalletNotFound(walletId);
+  }
+
+  @Override
+  public GetTransactionResponse getTransaction(String walletId, String txId) {
+    Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
+    if (optionalWallet.isPresent()) {
+      Wallet wallet = optionalWallet.get();
+      CryptoCurrency currency = wallet.getCurrency();
+      UTXORPCClient rpcClient = blockchainFactory.getRPCClient(currency);
+      synchronized (wallet) {
+        GetTrasactionResponse getTrasactionResponse = rpcClient.getTransaction(new GetTransactionRequest(wallet.getNodeWalletNameAlias(), txId));
+        return new GetTransactionResponse(getTrasactionResponse, currency);
+      }
+    }
+    throw new WalletException.WalletNotFound(walletId);
   }
 
   @Autowired

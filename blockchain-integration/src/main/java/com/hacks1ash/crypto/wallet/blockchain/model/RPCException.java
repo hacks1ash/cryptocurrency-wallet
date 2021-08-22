@@ -34,7 +34,7 @@ public class RPCException extends GenericRpcException {
                       int responseCode,
                       String responseMessage,
                       String response) {
-    super("RPC Query Failed (method: " + method + ", params: " + params + ", response code: " + responseCode + " responseMessage " + responseMessage + ", response: " + response);
+    super(((Map) ((Map) JSON.parse(response)).get("error")) == null && responseCode == 500 ? responseMessage : new RPCError((Map) ((Map) JSON.parse(response)).get("error")).getMessage());
     this.rpcMethod = method;
     this.rpcParams = params;
     this.responseCode = responseCode;

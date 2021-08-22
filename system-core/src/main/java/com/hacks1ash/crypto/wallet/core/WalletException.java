@@ -44,4 +44,10 @@ public class WalletException extends RuntimeException {
       super("coin.not.supported", shortName + " currently not supported", 400);
     }
   }
+
+  public static class UnknownTransactionType extends WalletException {
+    public UnknownTransactionType(String type) {
+      super("unknown.transaction.type", "Unknown transaction type -> " + type, 400);
+    }
+  }
 }

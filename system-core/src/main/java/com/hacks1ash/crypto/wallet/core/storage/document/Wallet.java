@@ -31,4 +31,6 @@ public class Wallet extends AbstractDocument {
 
   private List<Address> addresses;
 
+  private String changeAddress;
+
 }

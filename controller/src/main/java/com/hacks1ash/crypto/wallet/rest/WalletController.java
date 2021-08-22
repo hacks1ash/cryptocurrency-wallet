@@ -2,9 +2,9 @@ package com.hacks1ash.crypto.wallet.rest;
 
 import com.hacks1ash.crypto.wallet.core.WalletManager;
 import com.hacks1ash.crypto.wallet.core.model.request.AddressCreationRequest;
+import com.hacks1ash.crypto.wallet.core.model.request.TransactionRequest;
 import com.hacks1ash.crypto.wallet.core.model.request.WalletCreationRequest;
-import com.hacks1ash.crypto.wallet.core.model.response.AddressResponse;
-import com.hacks1ash.crypto.wallet.core.model.response.WalletResponse;
+import com.hacks1ash.crypto.wallet.core.model.response.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,6 +40,21 @@ public class WalletController {
   @RequestMapping(value = "/{walletId}/address", method = RequestMethod.GET)
   public List<AddressResponse> getAddresses(@PathVariable String walletId) {
     return walletManager.getAddresses(walletId);
+  }
+
+  @RequestMapping(value = "/{walletId}/estimateFee", method = RequestMethod.PUT)
+  public EstimateFeeResponse estimateFee(@PathVariable String walletId, @RequestBody TransactionRequest request) {
+    return walletManager.estimateFee(walletId, request);
+  }
+
+  @RequestMapping(value = "/{walletId}/transaction", method = RequestMethod.POST)
+  public SendTransactionResponse sendTransaction(@PathVariable String walletId, @RequestBody TransactionRequest request) {
+    return walletManager.sendTransaction(walletId, request);
+  }
+
+  @RequestMapping(value = "/{walletId}/transaction/{txId}", method = RequestMethod.GET)
+  public GetTransactionResponse getTransaction(@PathVariable String walletId, @PathVariable String txId) {
+    return walletManager.getTransaction(walletId, txId);
   }
 
   @Autowired

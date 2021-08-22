@@ -4,7 +4,7 @@ import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
 
-abstract class ListMapWrapper<X> extends AbstractList<X> {
+public abstract class ListMapWrapper<X> extends AbstractList<X> {
 
     public final List<Map<String, ?>> list;
     

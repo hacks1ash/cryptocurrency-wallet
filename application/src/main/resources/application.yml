@@ -3,8 +3,27 @@ server:
   address: 0.0.0.0
   port: 8080
   shutdown: graceful
+
   servlet:
     context-path: /api
+
+# GraphQL
+graphql:
+  servlet:
+    enabled: true
+    mapping: /graphql
+    subscriptions:
+      websocket:
+        path: /subscriptions
+    corsEnabled: false
+
+graphiql:
+  enabled: true
+  endpoint: /graphql
+  mapping: /graphiql
+  cdn:
+    enabled: false
+    version: latest
 
 # MongoDB Config
 spring:
@@ -27,7 +46,8 @@ springdoc:
 # Nodes
 bitcoin:
   rpcScheme: http
-  rpcHost: 3.68.186.140
-  rpcPort: 18332
-  rpcUsername: bitcoinNode
-  rpcPassword: bitcoinPassword
+  rpcHost: ${BITCOIN_RPC_HOST}
+  rpcPort: ${BITCOIN_RPC_PORT}
+  rpcUsername: ${BITCOIN_RPC_USERNAME}
+  rpcPassword: ${BITCOIN_RPC_PASSWORD}
+
