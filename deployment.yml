@@ -1,0 +1,104 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: crypto-wallet
+  name: deployment-crypto-wallet
+spec:
+  replicas: 1
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cryptcurrency-wallet-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cryptcurrency-wallet-service
+    spec:
+      containers:
+        - name: wallet-service
+          image: CONTAINER_IMAGE
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 2
+            httpGet:
+              port: 8080
+              path: /api/actuator/health
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVICE_TAG
+              value: "14"
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-crypto-wallet
+                  key: DATABASE_USER
+            - name: DATABASE_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-crypto-wallet
+                  key: DATABASE_PASS
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-crypto-wallet
+                  key: DATABASE_NAME
+            - name: DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-crypto-wallet
+                  key: DATABASE_HOST
+            - name: BITCOIN_RPC_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-crypto-wallet
+                  key: BITCOIN_RPC_HOST
+            - name: BITCOIN_RPC_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-crypto-wallet
+                  key: BITCOIN_RPC_PORT
+            - name: BITCOIN_RPC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-crypto-wallet
+                  key: BITCOIN_RPC_USERNAME
+            - name: BITCOIN_RPC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-crypto-wallet
+                  key: BITCOIN_RPC_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: crypto-wallet
+  name: service-crypto-wallet
+spec:
+  ports:
+    - port: 30010
+      targetPort: 8080
+      protocol: TCP
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: cryptcurrency-wallet-service
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  namespace: crypto-wallet
+  name: ingress-crypto-wallet
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: service-crypto-wallet
+              servicePort: 30010
