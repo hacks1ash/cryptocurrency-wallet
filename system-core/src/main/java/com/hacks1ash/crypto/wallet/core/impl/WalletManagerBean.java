@@ -176,7 +176,7 @@ public class WalletManagerBean implements WalletManager {
         UTXORPCClient rpcClient = blockchainFactory.getRPCClient(currency);
         try {
           FundRawTransactionResponse fundRawTransactionResponse = WalletUtils.fundRawTransaction(request, wallet, currency, rpcClient);
-          return new EstimateFeeResponse(CurrencyUtils.toMinorUnit(currency, fundRawTransactionResponse.getFee()), request.getFeePerSatoshi(), currency.getFeeUnit());
+          return new EstimateFeeResponse(CurrencyUtils.toMinorUnit(currency, fundRawTransactionResponse.getFee()), request.getFeePerByte(), currency.getFeeUnit());
         } catch (GenericRpcException ex) {
           throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
         }

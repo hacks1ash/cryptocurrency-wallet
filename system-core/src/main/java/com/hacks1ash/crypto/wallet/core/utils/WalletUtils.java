@@ -43,7 +43,7 @@ public class WalletUtils {
         null,
         false,
         false,
-        request.getFeePerSatoshi(),
+        request.getFeePerByte(),
         null,
         Collections.emptyList(),
         false,

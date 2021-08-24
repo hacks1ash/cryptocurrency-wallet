@@ -5,6 +5,8 @@ import com.hacks1ash.crypto.wallet.core.model.TransactionSpeed;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.util.List;
 
@@ -15,7 +17,7 @@ public class TransactionRequest {
 
   private TransactionSpeed speed;
 
-  private BigInteger feePerSatoshi;
+  private BigInteger feePerByte;
 
 }
 

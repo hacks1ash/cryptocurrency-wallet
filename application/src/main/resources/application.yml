@@ -19,7 +19,7 @@ graphql:
 
 graphiql:
   enabled: true
-  endpoint: /graphql
+  endpoint: /api/graphql
   mapping: /graphiql
   cdn:
     enabled: false

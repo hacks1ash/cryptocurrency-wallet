@@ -23,4 +23,6 @@ configurations {
     compileOnly.extendsFrom(springWeb)
     compileOnly.extendsFrom(springWebsocket)
     compileOnly.extendsFrom(lombok)
+    compileOnly.extendsFrom(springDocs)
+    compileOnly.extendsFrom(springValidation)
 }

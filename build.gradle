@@ -78,6 +78,7 @@ subprojects {
         springAOP
         springKafka
         springDocs
+        springValidation
 
         lombok
 
@@ -101,6 +102,7 @@ subprojects {
         springAOP 'org.springframework.boot:spring-boot-starter-aop'
         springKafka 'org.springframework.kafka:spring-kafka'
         springDocs 'org.springdoc:springdoc-openapi-ui:1.5.2'
+        springValidation 'org.springframework.boot:spring-boot-starter-validation'
 
         // Lombok
         lombok 'org.projectlombok:lombok'

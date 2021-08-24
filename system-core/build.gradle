@@ -26,4 +26,6 @@ configurations {
     compileOnly.extendsFrom(lombok)
     compileOnly.extendsFrom(bitcoinJ)
     compileOnly.extendsFrom(guava)
+    compileOnly.extendsFrom(springDocs)
+    compileOnly.extendsFrom(springValidation)
 }

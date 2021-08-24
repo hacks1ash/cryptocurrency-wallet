@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 
 @Data
@@ -11,6 +14,8 @@ import java.math.BigInteger;
 @AllArgsConstructor
 public class TransactionRecipient {
 
+  @NotEmpty
+  @NotNull
   private String address;
 
   private BigInteger amount;
