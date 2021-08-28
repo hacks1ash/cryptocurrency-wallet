@@ -50,4 +50,17 @@ public class WalletException extends RuntimeException {
       super("unknown.transaction.type", "Unknown transaction type -> " + type, 400);
     }
   }
+
+  public static class ParameterRequired  extends WalletException {
+    public ParameterRequired(String... parameters) {
+      super("parameter.required", "Parameters required: " + String.join(", ", parameters), 400);
+    }
+  }
+
+  public static class InvalidParameter  extends WalletException {
+    public InvalidParameter(String parameterName, String message) {
+      super("invalid.parameter", String.format("Parameter %s: %s", parameterName, message) , 400);
+    }
+  }
+
 }

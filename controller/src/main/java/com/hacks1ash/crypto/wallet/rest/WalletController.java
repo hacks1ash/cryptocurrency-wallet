@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.rest;
 
+import co.elastic.apm.api.CaptureTransaction;
 import com.hacks1ash.crypto.wallet.core.WalletManager;
 import com.hacks1ash.crypto.wallet.core.model.request.AddressCreationRequest;
 import com.hacks1ash.crypto.wallet.core.model.request.TransactionRequest;
@@ -43,22 +44,21 @@ public class WalletController {
     }
   )
   @PostMapping
+  @CaptureTransaction
   public WalletResponse createWallet(@Valid @RequestBody WalletCreationRequest request) {
-    return walletManager.createWallet(request);
+    return walletManager.createWallet(request.validate());
   }
 
   @Operation(
     method = "listWallets",
     summary = "Get wallets ",
-    parameters = {
-      @Parameter(name = "walletId", required = true, description = "Wallet ID returned in wallet creation request")
-    },
     responses = {
       @ApiResponse(responseCode = "200", description = "Wallets", content = @Content(array = @ArraySchema(schema = @Schema(implementation = WalletResponse.class)))),
       @ApiResponse(responseCode = "500", description = "Something unexpected happened", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     }
   )
   @GetMapping
+  @CaptureTransaction
   public List<WalletResponse> listWallets() {
     return walletManager.listWallets();
   }
@@ -77,6 +77,7 @@ public class WalletController {
     }
   )
   @RequestMapping(value = "/{walletId}/balance", method = RequestMethod.GET)
+  @CaptureTransaction
   public BigInteger getBalance(@PathVariable String walletId) {
     return walletManager.getBalance(walletId);
   }
@@ -104,8 +105,9 @@ public class WalletController {
     }
   )
   @RequestMapping(value = "/{walletId}/address", method = RequestMethod.POST)
+  @CaptureTransaction
   public AddressResponse createAddress(@PathVariable String walletId, @RequestBody AddressCreationRequest request) {
-    return walletManager.createAddress(walletId, request);
+    return walletManager.createAddress(walletId, request.validate());
   }
 
   @Operation(
@@ -121,6 +123,7 @@ public class WalletController {
     }
   )
   @RequestMapping(value = "/{walletId}/address", method = RequestMethod.GET)
+  @CaptureTransaction
   public List<AddressResponse> getAddresses(@PathVariable String walletId) {
     return walletManager.getAddresses(walletId);
   }
@@ -149,8 +152,9 @@ public class WalletController {
     }
   )
   @RequestMapping(value = "/{walletId}/estimateFee", method = RequestMethod.PUT)
+  @CaptureTransaction
   public EstimateFeeResponse estimateFee(@PathVariable String walletId, @RequestBody TransactionRequest request) {
-    return walletManager.estimateFee(walletId, request);
+    return walletManager.estimateFee(walletId, request.validate());
   }
 
   @Operation(
@@ -176,8 +180,9 @@ public class WalletController {
     }
   )
   @RequestMapping(value = "/{walletId}/transaction", method = RequestMethod.POST)
+  @CaptureTransaction
   public SendTransactionResponse sendTransaction(@PathVariable String walletId, @RequestBody TransactionRequest request) {
-    return walletManager.sendTransaction(walletId, request);
+    return walletManager.sendTransaction(walletId, request.validate());
   }
 
   @Operation(
@@ -195,6 +200,7 @@ public class WalletController {
     }
   )
   @RequestMapping(value = "/{walletId}/transaction/{txId}", method = RequestMethod.GET)
+  @CaptureTransaction
   public GetTransactionResponse getTransaction(@PathVariable String walletId, @PathVariable String txId) {
     return walletManager.getTransaction(walletId, txId);
   }

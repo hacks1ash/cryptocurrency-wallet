@@ -8,7 +8,7 @@ public enum TransactionType {
 
   public static TransactionType fromStr(String nodeStr) {
     for (TransactionType type :TransactionType.values()) {
-      if (type.name().toLowerCase().equals(nodeStr.toLowerCase())) {
+      if (type.name().equalsIgnoreCase(nodeStr)) {
         return type;
       }
     }

@@ -25,4 +25,5 @@ configurations {
     compileOnly.extendsFrom(lombok)
     compileOnly.extendsFrom(springDocs)
     compileOnly.extendsFrom(springValidation)
+    compileOnly.extendsFrom(apm)
 }

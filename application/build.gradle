@@ -28,6 +28,7 @@ configurations {
     implementation.extendsFrom(springKafka)
     implementation.extendsFrom(springDocs)
     implementation.extendsFrom(springValidation)
+    implementation.extendsFrom(apm)
 
     implementation.extendsFrom(lombok)
     providedRuntime.extendsFrom(tomcat)

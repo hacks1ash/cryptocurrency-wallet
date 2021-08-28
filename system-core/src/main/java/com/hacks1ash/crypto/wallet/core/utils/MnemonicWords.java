@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.core.utils;
 
+import co.elastic.apm.api.CaptureSpan;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -32,10 +33,12 @@ public class MnemonicWords {
     }
   }
 
+  @CaptureSpan
   public List<String> getWords() {
     return words;
   }
 
+  @CaptureSpan
   public List<String> getRandomWords(int count) {
     List<String> shuffledWords = new ArrayList<>(words);
     Collections.shuffle(shuffledWords);

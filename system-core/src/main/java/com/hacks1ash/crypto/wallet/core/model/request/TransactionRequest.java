@@ -1,17 +1,17 @@
 package com.hacks1ash.crypto.wallet.core.model.request;
 
+import com.hacks1ash.crypto.wallet.core.WalletException;
 import com.hacks1ash.crypto.wallet.core.model.TransactionRecipient;
 import com.hacks1ash.crypto.wallet.core.model.TransactionSpeed;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.util.List;
 
 @Data
-public class TransactionRequest {
+@EqualsAndHashCode(callSuper = true)
+public class TransactionRequest extends AbstractRequest {
 
   private List<TransactionRecipient> recipients;
 
@@ -19,5 +19,24 @@ public class TransactionRequest {
 
   private BigInteger feePerByte;
 
+  @Override
+  public TransactionRequest validate() {
+    if (recipients == null || recipients.isEmpty()) {
+      throw new WalletException.ParameterRequired("recipients");
+    } else {
+      for (TransactionRecipient recipient : recipients) {
+        recipient.validate();
+      }
+    }
+
+    if (speed == null && feePerByte == null) {
+      throw new WalletException.ParameterRequired("speed or feePerByte");
+    }
+
+    if (speed != null && feePerByte != null) {
+      throw new WalletException.ParameterRequired("speed or feePerByte", "not both");
+    }
+    return this;
+  }
 }
 

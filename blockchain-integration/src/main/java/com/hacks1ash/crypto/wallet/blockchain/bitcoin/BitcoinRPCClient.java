@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.blockchain.bitcoin;
 
+import co.elastic.apm.api.CaptureSpan;
 import com.hacks1ash.crypto.wallet.blockchain.RPCClientImpl;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.config.BitcoinConfigProperties;
@@ -27,6 +28,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public CreateWalletResponse createWallet(CreateWalletRequest request) {
     return new CreateWalletResponseWrapper(
       (Map<String, ?>) query(
@@ -44,6 +46,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   }
 
   @Override
+  @CaptureSpan
   public BigDecimal getBalance(GetBalanceRequest request) {
     return (BigDecimal) query(
       request.getWalletId(),
@@ -57,6 +60,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public EstimateSmartFeeResponse estimateSmartFee(EstimateSmartFeeRequest request) {
     return new EstimateSmartFeeResponseWrapper(
       (Map<String, ?>) query(
@@ -69,6 +73,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   }
 
   @Override
+  @CaptureSpan
   public void importPrivateKey(ImportPrivateKeyRequest request) {
     queryForStream(
       request.getWalletId(),
@@ -80,6 +85,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   }
 
   @Override
+  @CaptureSpan
   public String createRawTransaction(String walletId, ArrayList<BitcoinRawTxBuilder.TxInput> inputs, List<BitcoinRawTxBuilder.TxOutput> outputs) {
     List<Map<String, ?>> pInputs = new ArrayList<>();
 
@@ -107,6 +113,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public FundRawTransactionResponse fundRawTransaction(FundRawTransactionRequest request) {
     LinkedHashMap<String, Object> options = new LinkedHashMap<>() {
       {
@@ -162,6 +169,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public SignRawTransactionWithWalletResponse singRawTransactionWithWallet(String walletId, String txHex) {
     return new SignRawTransactionWithWalletResponseWrapper(
       (Map<String, ?>) query(
@@ -173,12 +181,14 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   }
 
   @Override
+  @CaptureSpan
   public String sendRawTransaction(String txHex) {
     return (String) query(null, "sendrawtransaction", txHex);
   }
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public GetTrasactionResponse getTransaction(GetTransactionRequest request) {
     return new GetTrasactionResponseWrapper(
       (Map<String, ?>) query(

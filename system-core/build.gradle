@@ -28,4 +28,5 @@ configurations {
     compileOnly.extendsFrom(guava)
     compileOnly.extendsFrom(springDocs)
     compileOnly.extendsFrom(springValidation)
+    compileOnly.extendsFrom(apm)
 }

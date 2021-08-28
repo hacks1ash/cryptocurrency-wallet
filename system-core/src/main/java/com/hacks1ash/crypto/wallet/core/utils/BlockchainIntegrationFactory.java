@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.core.utils;
 
+import co.elastic.apm.api.CaptureSpan;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
 import com.hacks1ash.crypto.wallet.core.WalletException;
 import com.hacks1ash.crypto.wallet.core.model.CryptoCurrency;
@@ -11,6 +12,7 @@ public class BlockchainIntegrationFactory {
 
   private final UTXORPCClient bitcoinRPCClient;
 
+  @CaptureSpan
   public UTXORPCClient getRPCClient(CryptoCurrency cryptoCurrency) {
     switch (cryptoCurrency) {
       case BITCOIN:

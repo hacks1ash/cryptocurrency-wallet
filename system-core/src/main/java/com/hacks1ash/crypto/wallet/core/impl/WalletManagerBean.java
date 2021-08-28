@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.core.impl;
 
+import co.elastic.apm.api.CaptureSpan;
 import com.hacks1ash.crypto.wallet.blockchain.GenericRpcException;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.CreateWalletRequest;
@@ -46,6 +47,7 @@ public class WalletManagerBean implements WalletManager {
   private BlockchainIntegrationFactory blockchainFactory;
 
   @Override
+  @CaptureSpan
   public WalletResponse createWallet(WalletCreationRequest request) {
     synchronized (request.getName()) {
       CryptoCurrency cryptoCurrency = CryptoCurrency.cryptoCurrencyFromShortName(request.getCurrency());
@@ -99,6 +101,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public List<WalletResponse> listWallets() {
     List<Wallet> wallets = walletRepository.findAll();
     return wallets
@@ -108,6 +111,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public BigInteger getBalance(String walletId) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -122,6 +126,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public AddressResponse createAddress(String walletId, AddressCreationRequest request) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -154,6 +159,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public List<AddressResponse> getAddresses(String walletId) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -167,6 +173,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public EstimateFeeResponse estimateFee(String walletId, TransactionRequest request) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -186,6 +193,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public SendTransactionResponse sendTransaction(String walletId, TransactionRequest request) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -207,6 +215,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public GetTransactionResponse getTransaction(String walletId, String txId) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {

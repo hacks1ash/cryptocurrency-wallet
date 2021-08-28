@@ -23,4 +23,5 @@ configurations {
     compileOnly.extendsFrom(springWeb)
     compileOnly.extendsFrom(springData)
     compileOnly.extendsFrom(lombok)
+    compileOnly.extendsFrom(apm)
 }
