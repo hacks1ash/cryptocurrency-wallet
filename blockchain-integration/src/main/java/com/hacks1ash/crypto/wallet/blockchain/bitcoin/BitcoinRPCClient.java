@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service("bitcoinRPCClient")
 public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
@@ -199,6 +200,15 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
         request.isVerbose()
       )
     );
+  }
+
+  public void importMulti(String walletId, List<ImportMultiRequest> addresses, boolean rescan) {
+    LinkedHashMap<String, Object> options = new LinkedHashMap<>() {
+      {
+        put("rescan", rescan);
+      }
+    };
+    query(walletId, "importmulti", addresses.stream().map(ImportMultiRequest::toJson).collect(Collectors.toList()), options);
   }
 
 }
