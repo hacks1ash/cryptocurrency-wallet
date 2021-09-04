@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet;
 
+import com.hacks1ash.crypto.wallet.blockchain.GenericRpcException;
 import com.hacks1ash.crypto.wallet.core.WalletException;
 import com.hacks1ash.crypto.wallet.core.model.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,14 @@ public class RestExceptionHandlerAdvice {
 
   @ExceptionHandler(WalletException.class)
   private ResponseEntity<ErrorResponse> walletException(WalletException ex) {
+    return new ResponseEntity<>(
+      new ErrorResponse(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode()),
+      HttpStatus.valueOf(ex.getErrorCode())
+    );
+  }
+
+  @ExceptionHandler(GenericRpcException.class)
+  private ResponseEntity<ErrorResponse> genericRpcException(GenericRpcException ex) {
     return new ResponseEntity<>(
       new ErrorResponse(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode()),
       HttpStatus.valueOf(ex.getErrorCode())

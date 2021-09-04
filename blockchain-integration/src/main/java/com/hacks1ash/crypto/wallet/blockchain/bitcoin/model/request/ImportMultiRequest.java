@@ -14,7 +14,7 @@ public class ImportMultiRequest {
 
   private String desc;
 
-  private String scriptPubKey;
+  private Object scriptPubKey;
 
   private String timestamp = "now";
 
@@ -36,7 +36,7 @@ public class ImportMultiRequest {
 
   private boolean keypool = false;
 
-  public ImportMultiRequest(String scriptPubKey, String redeemScript, String witnessScript, List<String> privKeys, boolean internal, String label) {
+  public ImportMultiRequest(Object scriptPubKey, String redeemScript, String witnessScript, List<String> privKeys, boolean internal, String label) {
     this.scriptPubKey = scriptPubKey;
     this.redeemScript = redeemScript;
     this.witnessScript = witnessScript;

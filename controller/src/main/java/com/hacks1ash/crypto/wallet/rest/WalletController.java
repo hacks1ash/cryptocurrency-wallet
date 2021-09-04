@@ -205,6 +205,26 @@ public class WalletController {
     return walletManager.getTransaction(walletId, txId);
   }
 
+
+  @Operation(
+    method = "getTransactions",
+    summary = "Get wallet transaction list",
+    parameters = {
+      @Parameter(name = "walletId", required = true, description = "Wallet ID returned in wallet creation request")
+    },
+    responses = {
+      @ApiResponse(responseCode = "200", description = "Transactions", content = @Content(array = @ArraySchema(schema =  @Schema(implementation = GetTransactionResponse.class)))),
+      @ApiResponse(responseCode = "400", description = "Invalid parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "Unable to find wallet/transaction", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "500", description = "Something unexpected happened", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    }
+  )
+  @RequestMapping(value = "/{walletId}/transaction", method = RequestMethod.GET)
+  @CaptureTransaction
+  public List<GetTransactionResponse> getTransactions(@PathVariable String walletId) {
+    return walletManager.getTransactions(walletId);
+  }
+
   @Autowired
   public void setWalletManager(WalletManager walletManager) {
     this.walletManager = walletManager;
