@@ -27,4 +27,8 @@ public interface UTXORPCClient {
   String sendRawTransaction(String txHex);
 
   GetTrasactionResponse getTransaction(GetTransactionRequest request);
+
+  void importMulti(String walletId, List<ImportMultiRequest> addresses, boolean rescan);
+
+  List<ListTransactionResponse> listTransactions(ListTransactionRequest request);
 }

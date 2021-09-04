@@ -9,6 +9,7 @@ import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.*;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.*;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.impl.*;
 import com.hacks1ash.crypto.wallet.blockchain.utils.HexCoder;
+import com.hacks1ash.crypto.wallet.blockchain.utils.ListMapWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service("bitcoinRPCClient")
 public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
@@ -199,6 +201,38 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
         request.isVerbose()
       )
     );
+  }
+
+  @Override
+  @CaptureSpan
+  public void importMulti(String walletId, List<ImportMultiRequest> addresses, boolean rescan) {
+    LinkedHashMap<String, Object> options = new LinkedHashMap<>() {
+      {
+        put("rescan", rescan);
+      }
+    };
+    query(walletId, "importmulti", addresses.stream().map(ImportMultiRequest::toJson).collect(Collectors.toList()), options);
+  }
+
+  @Override
+  @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
+  public List<ListTransactionResponse> listTransactions(ListTransactionRequest request) {
+    return new ListMapWrapper<>(
+      (List<Map<String, ?>>) query(
+        request.getWalletId(),
+        "listtransactions",
+        request.getLabel(),
+        request.getCount(),
+        request.getSkip(),
+        request.isIncludeWatchOnly()
+      )
+    ) {
+      @Override
+      protected ListTransactionResponse wrap(Map<String, ?> m) {
+        return new ListTransactionResponseWrapper(m);
+      }
+    };
   }
 
 }

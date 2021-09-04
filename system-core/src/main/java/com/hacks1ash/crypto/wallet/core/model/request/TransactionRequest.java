@@ -13,7 +13,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class TransactionRequest extends AbstractRequest {
 
-  private List<TransactionRecipient> recipients;
+  private List<TransactionRecipientRequest> recipients;
 
   private TransactionSpeed speed;
 
@@ -24,7 +24,7 @@ public class TransactionRequest extends AbstractRequest {
     if (recipients == null || recipients.isEmpty()) {
       throw new WalletException.ParameterRequired("recipients");
     } else {
-      for (TransactionRecipient recipient : recipients) {
+      for (TransactionRecipientRequest recipient : recipients) {
         recipient.validate();
       }
     }

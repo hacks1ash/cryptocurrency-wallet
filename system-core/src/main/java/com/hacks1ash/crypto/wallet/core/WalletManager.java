@@ -25,4 +25,7 @@ public interface WalletManager {
   SendTransactionResponse sendTransaction(String walletId, TransactionRequest request);
 
   GetTransactionResponse getTransaction(String walletId, String txId);
+
+  List<GetTransactionResponse> getTransactions(String walletId);
+
 }
