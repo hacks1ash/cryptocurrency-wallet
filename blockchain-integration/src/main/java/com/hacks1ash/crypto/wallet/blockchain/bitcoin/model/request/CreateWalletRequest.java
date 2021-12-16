@@ -5,10 +5,8 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@RequiredArgsConstructor
 public class CreateWalletRequest {
 
-  @NonNull
   private String name;
 
   private boolean disablePrivateKeys = false;
@@ -22,5 +20,10 @@ public class CreateWalletRequest {
   private boolean descriptors = false;
 
   private boolean loadOnStartup = true;
+
+  public CreateWalletRequest(String name, boolean blank) {
+    this.name = name;
+    this.blank = blank;
+  }
 
 }

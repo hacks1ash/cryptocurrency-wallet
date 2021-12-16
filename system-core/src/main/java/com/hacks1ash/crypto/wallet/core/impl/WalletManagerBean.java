@@ -71,7 +71,7 @@ public class WalletManagerBean implements WalletManager {
 
       String nodeWalletName = UUID.randomUUID().toString();
       try {
-        rpcClient.createWallet(new CreateWalletRequest(nodeWalletName));
+        rpcClient.createWallet(new CreateWalletRequest(nodeWalletName, true));
       } catch (GenericRpcException ex) {
         throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
       }
