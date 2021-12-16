@@ -1,14 +1,14 @@
 import argparse
-import json
-import logging
-import os
 import random
-import subprocess
 import time
-from threading import Thread
 
 import requests
+import json
+import subprocess
+import logging
 import settings
+from threading import Thread
+import os
 
 logging.basicConfig(filename=os.path.join(settings.LOG_PATH, "block-notify.log"),
                     filemode='a',
@@ -44,7 +44,7 @@ if block_hash:
     logger.info(block_json)
     logger.info(f"BLOCK HEIGHT: {block_height}")
 
-data_to_send = {"blockNumber": block_height, "coin": "coin"}
+data_to_send = {"blockNumber": block_height, "coin": settings.COIN_TICKER}
 
 
 def post_notification(notify_url):
@@ -55,7 +55,7 @@ def post_notification(notify_url):
         request_url = notify_url
         try:
             response = requests.post(request_url, json=data_to_send)
-        except Exception as e:
+        except Exception as _:
             logger.info(f"Occured exception while sending request : {request_url}")
             logger.info("Next request after 30 seconds")
             time.sleep(sleep_time)

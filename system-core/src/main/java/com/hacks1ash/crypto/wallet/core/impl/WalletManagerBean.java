@@ -1,12 +1,15 @@
 package com.hacks1ash.crypto.wallet.core.impl;
 
+import co.elastic.apm.api.CaptureSpan;
 import com.hacks1ash.crypto.wallet.blockchain.GenericRpcException;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.CreateWalletRequest;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.GetBalanceRequest;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.GetTransactionRequest;
+import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.ListTransactionRequest;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.FundRawTransactionResponse;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.GetTrasactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.ListTransactionResponse;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.SignRawTransactionWithWalletResponse;
 import com.hacks1ash.crypto.wallet.core.WalletException;
 import com.hacks1ash.crypto.wallet.core.WalletManager;
@@ -46,6 +49,7 @@ public class WalletManagerBean implements WalletManager {
   private BlockchainIntegrationFactory blockchainFactory;
 
   @Override
+  @CaptureSpan
   public WalletResponse createWallet(WalletCreationRequest request) {
     synchronized (request.getName()) {
       CryptoCurrency cryptoCurrency = CryptoCurrency.cryptoCurrencyFromShortName(request.getCurrency());
@@ -67,17 +71,15 @@ public class WalletManagerBean implements WalletManager {
 
       String nodeWalletName = UUID.randomUUID().toString();
       try {
-        rpcClient.createWallet(new CreateWalletRequest(nodeWalletName));
+        rpcClient.createWallet(new CreateWalletRequest(nodeWalletName, true));
       } catch (GenericRpcException ex) {
         throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
       }
 
-      String changeAddress = WalletUtils.createAddress(
+      String changeAddress = WalletUtils.createChangeAddress(
         rpcClient,
         nodeWalletName,
         masterPrivateKey,
-        "Change Address",
-        AddressType.P2SH,
         cryptoCurrency.getNetworkParameters(),
         0
       );
@@ -99,6 +101,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public List<WalletResponse> listWallets() {
     List<Wallet> wallets = walletRepository.findAll();
     return wallets
@@ -108,6 +111,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public BigInteger getBalance(String walletId) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -122,6 +126,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public AddressResponse createAddress(String walletId, AddressCreationRequest request) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -154,6 +159,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public List<AddressResponse> getAddresses(String walletId) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -167,6 +173,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public EstimateFeeResponse estimateFee(String walletId, TransactionRequest request) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -176,7 +183,7 @@ public class WalletManagerBean implements WalletManager {
         UTXORPCClient rpcClient = blockchainFactory.getRPCClient(currency);
         try {
           FundRawTransactionResponse fundRawTransactionResponse = WalletUtils.fundRawTransaction(request, wallet, currency, rpcClient);
-          return new EstimateFeeResponse(CurrencyUtils.toMinorUnit(currency, fundRawTransactionResponse.getFee()), request.getFeePerSatoshi(), currency.getFeeUnit());
+          return new EstimateFeeResponse(CurrencyUtils.toMinorUnit(currency, fundRawTransactionResponse.getFee()), request.getFeePerByte(), currency.getFeeUnit());
         } catch (GenericRpcException ex) {
           throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
         }
@@ -186,6 +193,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public SendTransactionResponse sendTransaction(String walletId, TransactionRequest request) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -197,7 +205,8 @@ public class WalletManagerBean implements WalletManager {
           FundRawTransactionResponse fundRawTransactionResponse = WalletUtils.fundRawTransaction(request, wallet, currency, rpcClient);
           SignRawTransactionWithWalletResponse singRawTransactionWithWallet = rpcClient.singRawTransactionWithWallet(wallet.getNodeWalletNameAlias(), fundRawTransactionResponse.getHex());
           String finalTxId = rpcClient.sendRawTransaction(singRawTransactionWithWallet.getTxHex());
-          return new SendTransactionResponse(finalTxId, request.getRecipients(), BigInteger.ZERO, currency.getFeeUnit());
+          GetTransactionResponse transaction = getTransaction(wallet.getId(), finalTxId);
+          return new SendTransactionResponse(transaction.getTxId(), transaction.getParticipants(), transaction.getBlockchainFee(), currency.getFeeUnit());
         } catch (GenericRpcException ex) {
           throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
         }
@@ -207,6 +216,7 @@ public class WalletManagerBean implements WalletManager {
   }
 
   @Override
+  @CaptureSpan
   public GetTransactionResponse getTransaction(String walletId, String txId) {
     Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
     if (optionalWallet.isPresent()) {
@@ -216,6 +226,30 @@ public class WalletManagerBean implements WalletManager {
       synchronized (wallet) {
         GetTrasactionResponse getTrasactionResponse = rpcClient.getTransaction(new GetTransactionRequest(wallet.getNodeWalletNameAlias(), txId));
         return new GetTransactionResponse(getTrasactionResponse, currency);
+      }
+    }
+    throw new WalletException.WalletNotFound(walletId);
+  }
+
+  @Override
+  public List<GetTransactionResponse> getTransactions(String walletId) {
+    Optional<Wallet> optionalWallet = walletRepository.findById(walletId);
+    if (optionalWallet.isPresent()) {
+      Wallet wallet = optionalWallet.get();
+      CryptoCurrency currency = wallet.getCurrency();
+      UTXORPCClient rpcClient = blockchainFactory.getRPCClient(currency);
+      synchronized (wallet) {
+        List<ListTransactionResponse> listTransactionResponses = rpcClient.listTransactions(
+          new ListTransactionRequest(
+            wallet.getNodeWalletNameAlias(),
+            Integer.MAX_VALUE
+          )
+        );
+        List<GetTransactionResponse> result = new ArrayList<>();
+        for (ListTransactionResponse listTransactionResponse : listTransactionResponses) {
+          result.add(new GetTransactionResponse(listTransactionResponse, currency));
+        }
+        return WalletUtils.formatTransactions(result);
       }
     }
     throw new WalletException.WalletNotFound(walletId);

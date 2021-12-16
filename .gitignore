@@ -41,3 +41,6 @@ eks-admin-service-account.yaml
 secret.yml
 # Ignore Gradle build output directory
 build
+
+/secrets.yml
+**/venv

@@ -1,6 +1,7 @@
 package com.hacks1ash.crypto.wallet.core.model.response;
 
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.GetTrasactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.ListTransactionResponse;
 import com.hacks1ash.crypto.wallet.core.model.CryptoCurrency;
 import com.hacks1ash.crypto.wallet.core.model.TransactionRecipient;
 import com.hacks1ash.crypto.wallet.core.model.TransactionType;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -42,5 +44,13 @@ public class GetTransactionResponse {
       this.participants.add(new TransactionRecipient(detail.getAddress(), CurrencyUtils.toMinorUnit(currency, detail.getAmount())));
     }
     this.type = isInternal ? TransactionType.INTERNAL_TRANSFER : this.type;
+  }
+
+  public GetTransactionResponse(ListTransactionResponse response, CryptoCurrency currency) {
+    this.txId = response.getTxId();
+    this.confirmations = response.getConfirmations();
+    this.blockchainFee = response.getFee() == null ? BigInteger.ZERO : CurrencyUtils.toMinorUnit(currency, response.getFee());
+    this.type = TransactionType.fromStr(response.getCategory());
+    this.participants = Collections.singletonList(new TransactionRecipient(response.getAddress(), CurrencyUtils.toMinorUnit(currency, response.getAmount())));
   }
 }

@@ -78,14 +78,15 @@ metadata:
   name: service-crypto-wallet
 spec:
   ports:
-    - port: 30010
+    - name: http
+      port: 8080
       targetPort: 8080
       protocol: TCP
   type: NodePort
   selector:
     app.kubernetes.io/name: cryptcurrency-wallet-service
 ---
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   namespace: crypto-wallet
@@ -93,12 +94,19 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/target-type: instance
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-central-1:792642148711:certificate/7e0fdd50-ee2a-4e34-932b-5e2decef45ce
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/healthcheck-path: "/api/actuator/health"
 spec:
   rules:
     - http:
         paths:
           - path: /*
+            pathType: Prefix
             backend:
-              serviceName: service-crypto-wallet
-              servicePort: 30010
+              service:
+                name: service-crypto-wallet
+                port:
+                  name: http

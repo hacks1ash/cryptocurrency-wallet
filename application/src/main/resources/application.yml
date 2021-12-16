@@ -5,6 +5,7 @@ server:
   shutdown: graceful
   servlet:
     context-path: /api
+  forward-headers-strategy: native
 
 # GraphQL
 graphql:
@@ -18,19 +19,26 @@ graphql:
 
 graphiql:
   enabled: true
-  endpoint: /graphql
+  endpoint: /api/graphql
   mapping: /graphiql
   cdn:
     enabled: false
     version: latest
 
-# MongoDB Config
+# Spring Config
 spring:
   data:
     mongodb:
       uri: mongodb+srv://${DATABASE_USER}:${DATABASE_PASS}@${DATABASE_HOST}/${DATABASE_NAME}?retryWrites=true&w=majority
       auto-index-creation: false
+  application:
+    name: "CryptoCurrency Wallet"
 
+
+logging:
+  file:
+    path: ./
+    name: app.log
 
 # Swagger
 springdoc:

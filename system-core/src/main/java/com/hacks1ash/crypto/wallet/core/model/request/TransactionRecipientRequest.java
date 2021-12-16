@@ -1,22 +1,24 @@
-package com.hacks1ash.crypto.wallet.core.model;
+package com.hacks1ash.crypto.wallet.core.model.request;
 
 import com.hacks1ash.crypto.wallet.core.WalletException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class TransactionRecipient {
+@EqualsAndHashCode(callSuper = true)
+public class TransactionRecipientRequest extends AbstractRequest {
 
   private String address;
 
   private BigInteger amount;
 
-  public void validate() {
+  private boolean subtractFee = false;
+
+  public TransactionRecipientRequest validate() {
     if (address == null || address.isEmpty()) {
       throw new WalletException.ParameterRequired("address");
     }
@@ -25,6 +27,7 @@ public class TransactionRecipient {
     } else if (amount.compareTo(BigInteger.valueOf(1000)) < 0) {
       throw new WalletException.InvalidParameter("amount", "must be more then 1000 satoshi");
     }
+    return this;
   }
 
 

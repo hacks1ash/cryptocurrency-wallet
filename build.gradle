@@ -78,7 +78,12 @@ subprojects {
         springAOP
         springKafka
         springDocs
+        springValidation
 
+        // Monitoring
+        apm
+
+        // Lombok
         lombok
 
         tomcat
@@ -101,6 +106,12 @@ subprojects {
         springAOP 'org.springframework.boot:spring-boot-starter-aop'
         springKafka 'org.springframework.kafka:spring-kafka'
         springDocs 'org.springdoc:springdoc-openapi-ui:1.5.2'
+        springValidation 'org.springframework.boot:spring-boot-starter-validation'
+
+        // Monitoring
+        apm 'co.elastic.apm:apm-agent-attach:1.25.0'
+        apm 'co.elastic.apm:apm-agent-api:1.25.0'
+        apm 'co.elastic.apm:apm-opentracing:1.25.0'
 
         // Lombok
         lombok 'org.projectlombok:lombok'

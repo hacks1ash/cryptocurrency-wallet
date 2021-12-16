@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.blockchain.bitcoin;
 
+import co.elastic.apm.api.CaptureSpan;
 import com.hacks1ash.crypto.wallet.blockchain.RPCClientImpl;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.config.BitcoinConfigProperties;
@@ -8,6 +9,7 @@ import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.*;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.*;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.impl.*;
 import com.hacks1ash.crypto.wallet.blockchain.utils.HexCoder;
+import com.hacks1ash.crypto.wallet.blockchain.utils.ListMapWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service("bitcoinRPCClient")
 public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
@@ -27,6 +30,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public CreateWalletResponse createWallet(CreateWalletRequest request) {
     return new CreateWalletResponseWrapper(
       (Map<String, ?>) query(
@@ -44,6 +48,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   }
 
   @Override
+  @CaptureSpan
   public BigDecimal getBalance(GetBalanceRequest request) {
     return (BigDecimal) query(
       request.getWalletId(),
@@ -57,6 +62,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public EstimateSmartFeeResponse estimateSmartFee(EstimateSmartFeeRequest request) {
     return new EstimateSmartFeeResponseWrapper(
       (Map<String, ?>) query(
@@ -69,6 +75,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   }
 
   @Override
+  @CaptureSpan
   public void importPrivateKey(ImportPrivateKeyRequest request) {
     queryForStream(
       request.getWalletId(),
@@ -80,6 +87,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   }
 
   @Override
+  @CaptureSpan
   public String createRawTransaction(String walletId, ArrayList<BitcoinRawTxBuilder.TxInput> inputs, List<BitcoinRawTxBuilder.TxOutput> outputs) {
     List<Map<String, ?>> pInputs = new ArrayList<>();
 
@@ -107,6 +115,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public FundRawTransactionResponse fundRawTransaction(FundRawTransactionRequest request) {
     LinkedHashMap<String, Object> options = new LinkedHashMap<>() {
       {
@@ -162,6 +171,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public SignRawTransactionWithWalletResponse singRawTransactionWithWallet(String walletId, String txHex) {
     return new SignRawTransactionWithWalletResponseWrapper(
       (Map<String, ?>) query(
@@ -173,12 +183,14 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   }
 
   @Override
+  @CaptureSpan
   public String sendRawTransaction(String txHex) {
     return (String) query(null, "sendrawtransaction", txHex);
   }
 
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
   public GetTrasactionResponse getTransaction(GetTransactionRequest request) {
     return new GetTrasactionResponseWrapper(
       (Map<String, ?>) query(
@@ -189,6 +201,38 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
         request.isVerbose()
       )
     );
+  }
+
+  @Override
+  @CaptureSpan
+  public void importMulti(String walletId, List<ImportMultiRequest> addresses, boolean rescan) {
+    LinkedHashMap<String, Object> options = new LinkedHashMap<>() {
+      {
+        put("rescan", rescan);
+      }
+    };
+    query(walletId, "importmulti", addresses.stream().map(ImportMultiRequest::toJson).collect(Collectors.toList()), options);
+  }
+
+  @Override
+  @SuppressWarnings({"unchecked", "unsafe"})
+  @CaptureSpan
+  public List<ListTransactionResponse> listTransactions(ListTransactionRequest request) {
+    return new ListMapWrapper<>(
+      (List<Map<String, ?>>) query(
+        request.getWalletId(),
+        "listtransactions",
+        request.getLabel(),
+        request.getCount(),
+        request.getSkip(),
+        request.isIncludeWatchOnly()
+      )
+    ) {
+      @Override
+      protected ListTransactionResponse wrap(Map<String, ?> m) {
+        return new ListTransactionResponseWrapper(m);
+      }
+    };
   }
 
 }
