@@ -21,9 +21,8 @@ phases:
   build:
     commands:
       - ./gradlew clean build
-      - docker build -t $IMAGE_TAG_PREFIX:$CODEBUILD_BUILD_NUMBER .
-      - docker tag $IMAGE_TAG_PREFIX:$CODEBUILD_BUILD_NUMBER $REPOSITORY_URI:$IMAGE_TAG
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - docker build -t $FULL_IMAGE_PATH -f Dockerfile . --no-cache
+      - docker push $FULL_IMAGE_PATH
   post_build:
     commands:
       - CREDENTIALS=$(aws sts assume-role --role-arn $KUBECTL_ROLE_ARN --role-session-name codebuild-kubectl --duration-seconds 900)
