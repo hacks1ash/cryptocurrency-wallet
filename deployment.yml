@@ -2,22 +2,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: crypto-wallet
-  name: deployment-crypto-wallet
+  namespace: {ENVIRONMENT_IDENTIFIER}
+  name: ows-core-deployment
 spec:
   replicas: 1
   minReadySeconds: 5
   selector:
     matchLabels:
-      app.kubernetes.io/name: cryptcurrency-wallet-service
+      app.kubernetes.io/name: ows-core
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: cryptcurrency-wallet-service
+        app.kubernetes.io/name: ows-core
     spec:
       containers:
-        - name: wallet-service
-          image: CONTAINER_IMAGE
+        - name: ows-core
+          image: {DOCKER_IMAGE_PLACEHOLDER}
           readinessProbe:
             initialDelaySeconds: 10
             periodSeconds: 2
@@ -33,49 +33,49 @@ spec:
             - name: DATABASE_USER
               valueFrom:
                 secretKeyRef:
-                  name: secrets-crypto-wallet
+                  name: ows-core-secrets
                   key: DATABASE_USER
             - name: DATABASE_PASS
               valueFrom:
                 secretKeyRef:
-                  name: secrets-crypto-wallet
+                  name: ows-core-secrets
                   key: DATABASE_PASS
             - name: DATABASE_NAME
               valueFrom:
                 secretKeyRef:
-                  name: secrets-crypto-wallet
+                  name: ows-core-secrets
                   key: DATABASE_NAME
             - name: DATABASE_HOST
               valueFrom:
                 secretKeyRef:
-                  name: secrets-crypto-wallet
+                  name: ows-core-secrets
                   key: DATABASE_HOST
             - name: BITCOIN_RPC_HOST
               valueFrom:
                 secretKeyRef:
-                  name: secrets-crypto-wallet
+                  name: ows-core-secrets
                   key: BITCOIN_RPC_HOST
             - name: BITCOIN_RPC_PORT
               valueFrom:
                 secretKeyRef:
-                  name: secrets-crypto-wallet
+                  name: ows-core-secrets
                   key: BITCOIN_RPC_PORT
             - name: BITCOIN_RPC_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: secrets-crypto-wallet
+                  name: ows-core-secrets
                   key: BITCOIN_RPC_USERNAME
             - name: BITCOIN_RPC_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: secrets-crypto-wallet
+                  name: ows-core-secrets
                   key: BITCOIN_RPC_PASSWORD
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: crypto-wallet
-  name: service-crypto-wallet
+  namespace: {ENVIRONMENT_IDENTIFIER}
+  name: ows-core-service
 spec:
   ports:
     - name: http
@@ -84,18 +84,18 @@ spec:
       protocol: TCP
   type: NodePort
   selector:
-    app.kubernetes.io/name: cryptcurrency-wallet-service
+    app.kubernetes.io/name: ows-core
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  namespace: crypto-wallet
-  name: ingress-crypto-wallet
+  namespace: {ENVIRONMENT_IDENTIFIER}
+  name: ows-core-ingress
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: instance
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-central-1:792642148711:certificate/7e0fdd50-ee2a-4e34-932b-5e2decef45ce
+    alb.ingress.kubernetes.io/certificate-arn: {SSL_CERT_ARN}
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
     alb.ingress.kubernetes.io/healthcheck-path: "/api/actuator/health"
@@ -107,6 +107,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: service-crypto-wallet
+                name: ows-core-service
                 port:
                   name: http
