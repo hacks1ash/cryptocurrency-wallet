@@ -12,16 +12,16 @@ phases:
   pre_build:
     commands:
       - IMAGE_TAG=$IMAGE_TAG_PREFIX-$CODEBUILD_BUILD_NUMBER
-      - FULL_IMAGE_PATH="$DOCKER_REPOSITORY_URL/$DOCKER_IMAGE_PREFIX:$IMAGE_TAG"
+      - FULL_IMAGE_PATH="$REPOSITORY_URI:$IMAGE_TAG"
       - sed -i "s|{DOCKER_IMAGE_PLACEHOLDER}|$FULL_IMAGE_PATH|g" deployment.yml
       - sed -i "s|{ENVIRONMENT_IDENTIFIER}|$ENVIRONMENT_IDENTIFIER|g" deployment.yml
-      - sed -i "s|{SSL_CERT_ARN}|$SSL_CERT_ARN|g" deployment.yml
       - $(aws ecr get-login --no-include-email)
       - export KUBECONFIG=$HOME/.kube/config
   build:
     commands:
       - ./gradlew clean build
-      - docker build -t $FULL_IMAGE_PATH -f Dockerfile . --no-cache
+      - docker build -t $IMAGE_TAG_PREFIX:$CODEBUILD_BUILD_NUMBER .
+      - docker tag $IMAGE_TAG_PREFIX:$CODEBUILD_BUILD_NUMBER $FULL_IMAGE_PATH
       - docker push $FULL_IMAGE_PATH
   post_build:
     commands:
@@ -35,3 +35,5 @@ phases:
       - printf '[{"name":"ows-core-deployment","imageUri":"%s","buildNumber":"$CODEBUILD_BUILD_NUMBER"}]' $REPOSITORY_URI:$TAG > build.json
 artifacts:
   files: build.json
+
+#      - sed -i "s|{SSL_CERT_ARN}|$SSL_CERT_ARN|g" deployment.yml
