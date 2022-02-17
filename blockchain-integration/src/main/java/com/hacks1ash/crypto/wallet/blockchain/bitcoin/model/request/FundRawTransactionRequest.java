@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request;
 
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FundRawTransactionRequest {
+
+  private UTXOProvider utxoProvider;
 
   private String walletId;
 

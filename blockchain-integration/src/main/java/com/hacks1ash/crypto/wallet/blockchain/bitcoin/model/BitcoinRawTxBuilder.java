@@ -3,6 +3,7 @@ package com.hacks1ash.crypto.wallet.blockchain.bitcoin.model;
 import com.hacks1ash.crypto.wallet.blockchain.GenericRpcException;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.FundRawTransactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -31,8 +32,8 @@ public class BitcoinRawTxBuilder {
     return this;
   }
 
-  public String create() throws GenericRpcException {
-    return rpcClient.createRawTransaction(walletId, new ArrayList<>(inputs), outputs);
+  public String create(UTXOProvider utxoProvider) throws GenericRpcException {
+    return rpcClient.createRawTransaction(utxoProvider, walletId, new ArrayList<>(inputs), outputs);
   }
 
   private static class Input extends BasicTxInput {

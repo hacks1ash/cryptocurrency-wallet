@@ -3,6 +3,7 @@ package com.hacks1ash.crypto.wallet.blockchain;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.BitcoinRawTxBuilder;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.*;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.*;
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -18,17 +19,17 @@ public interface UTXORPCClient {
 
   void importPrivateKey(ImportPrivateKeyRequest request);
 
-  String createRawTransaction(String walletId, ArrayList<BitcoinRawTxBuilder.TxInput> txInputs, List<BitcoinRawTxBuilder.TxOutput> outputs);
+  String createRawTransaction(UTXOProvider utxoProvider, String walletId, ArrayList<BitcoinRawTxBuilder.TxInput> txInputs, List<BitcoinRawTxBuilder.TxOutput> outputs);
 
   FundRawTransactionResponse fundRawTransaction(FundRawTransactionRequest request);
 
-  SignRawTransactionWithWalletResponse singRawTransactionWithWallet(String walletId, String txHex);
+  SignRawTransactionWithWalletResponse singRawTransactionWithWallet(UTXOProvider utxoProvider, String walletId, String txHex);
 
-  String sendRawTransaction(String txHex);
+  String sendRawTransaction(UTXOProvider utxoProvider, String txHex);
 
   GetTrasactionResponse getTransaction(GetTransactionRequest request);
 
-  void importMulti(String walletId, List<ImportMultiRequest> addresses, boolean rescan);
+  void importMulti(UTXOProvider utxoProvider, String walletId, List<ImportMultiRequest> addresses, boolean rescan);
 
   List<ListTransactionResponse> listTransactions(ListTransactionRequest request);
 }

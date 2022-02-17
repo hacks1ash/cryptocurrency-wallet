@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request;
 
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GetTransactionRequest {
 
+  private UTXOProvider utxoProvider;
+
   private String walletId;
 
   private String txId;
@@ -17,7 +20,8 @@ public class GetTransactionRequest {
 
   private boolean verbose = false;
 
-  public GetTransactionRequest(String walletId, String txId) {
+  public GetTransactionRequest(UTXOProvider utxoProvider, String walletId, String txId) {
+    this.utxoProvider = utxoProvider;
     this.walletId = walletId;
     this.txId = txId;
   }

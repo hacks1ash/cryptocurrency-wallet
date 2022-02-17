@@ -3,11 +3,13 @@ package com.hacks1ash.crypto.wallet.blockchain.bitcoin;
 import co.elastic.apm.api.CaptureSpan;
 import com.hacks1ash.crypto.wallet.blockchain.RPCClientImpl;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.config.BitcoinConfigProperties;
+import com.hacks1ash.crypto.wallet.blockchain.bitcoin.config.UTXOConfigProperties;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.BitcoinRawTxBuilder;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.*;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.*;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.impl.*;
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOQualifier;
 import com.hacks1ash.crypto.wallet.blockchain.utils.HexCoder;
 import com.hacks1ash.crypto.wallet.blockchain.utils.ListMapWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +24,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service("bitcoinRPCClient")
+@UTXOQualifier(providers = {UTXOProvider.BITCOIN, UTXOProvider.LOCAL_BITCOIN, UTXOProvider.TEST_BITCOIN})
 public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
-  public BitcoinRPCClient(@Autowired BitcoinConfigProperties properties) throws MalformedURLException {
-    super(properties.getRpcScheme() + "://" + properties.getRpcUsername() + ":" + properties.getRpcPassword() + "@" + properties.getRpcHost() + ":" + properties.getRpcPort());
+  public BitcoinRPCClient(@Autowired UTXOConfigProperties properties) {
+    super(properties);
   }
 
   @Override
@@ -34,6 +37,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   public CreateWalletResponse createWallet(CreateWalletRequest request) {
     return new CreateWalletResponseWrapper(
       (Map<String, ?>) query(
+        request.getUtxoProvider(),
         null,
         "createwallet",
         request.getName(),
@@ -51,6 +55,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   @CaptureSpan
   public BigDecimal getBalance(GetBalanceRequest request) {
     return (BigDecimal) query(
+      request.getUtxoProvider(),
       request.getWalletId(),
       "getbalance",
       "*",
@@ -66,6 +71,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   public EstimateSmartFeeResponse estimateSmartFee(EstimateSmartFeeRequest request) {
     return new EstimateSmartFeeResponseWrapper(
       (Map<String, ?>) query(
+        request.getUtxoProvider(),
         null,
         "estimatesmartfee",
         request.getConfTargetBlock(),
@@ -78,6 +84,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   @CaptureSpan
   public void importPrivateKey(ImportPrivateKeyRequest request) {
     queryForStream(
+      request.getUtxoProvider(),
       request.getWalletId(),
       "importprivkey",
       request.getPrivateKey(),
@@ -88,7 +95,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @CaptureSpan
-  public String createRawTransaction(String walletId, ArrayList<BitcoinRawTxBuilder.TxInput> inputs, List<BitcoinRawTxBuilder.TxOutput> outputs) {
+  public String createRawTransaction(UTXOProvider utxoProvider, String walletId, ArrayList<BitcoinRawTxBuilder.TxInput> inputs, List<BitcoinRawTxBuilder.TxOutput> outputs) {
     List<Map<String, ?>> pInputs = new ArrayList<>();
 
     for (final BitcoinRawTxBuilder.TxInput txInput : inputs) {
@@ -110,7 +117,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
       }
     }
 
-    return (String) query(walletId, "createrawtransaction", pInputs, pOutputs);
+    return (String) query(utxoProvider, walletId, "createrawtransaction", pInputs, pOutputs);
   }
 
   @Override
@@ -160,6 +167,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
     return new FundRawTransactionResponseWrapper(
       (Map<String, ?>) query(
+        request.getUtxoProvider(),
         request.getWalletId(),
         "fundrawtransaction",
         request.getTxId(),
@@ -172,9 +180,10 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   @Override
   @SuppressWarnings({"unchecked", "unsafe"})
   @CaptureSpan
-  public SignRawTransactionWithWalletResponse singRawTransactionWithWallet(String walletId, String txHex) {
+  public SignRawTransactionWithWalletResponse singRawTransactionWithWallet(UTXOProvider utxoProvider, String walletId, String txHex) {
     return new SignRawTransactionWithWalletResponseWrapper(
       (Map<String, ?>) query(
+        utxoProvider,
         walletId,
         "signrawtransactionwithwallet",
         txHex
@@ -184,8 +193,8 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @CaptureSpan
-  public String sendRawTransaction(String txHex) {
-    return (String) query(null, "sendrawtransaction", txHex);
+  public String sendRawTransaction(UTXOProvider utxoProvider, String txHex) {
+    return (String) query(utxoProvider, null, "sendrawtransaction", txHex);
   }
 
   @Override
@@ -194,6 +203,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   public GetTrasactionResponse getTransaction(GetTransactionRequest request) {
     return new GetTrasactionResponseWrapper(
       (Map<String, ?>) query(
+        request.getUtxoProvider(),
         request.getWalletId(),
         "gettransaction",
         request.getTxId(),
@@ -205,13 +215,13 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
 
   @Override
   @CaptureSpan
-  public void importMulti(String walletId, List<ImportMultiRequest> addresses, boolean rescan) {
+  public void importMulti(UTXOProvider utxoProvider, String walletId, List<ImportMultiRequest> addresses, boolean rescan) {
     LinkedHashMap<String, Object> options = new LinkedHashMap<>() {
       {
         put("rescan", rescan);
       }
     };
-    query(walletId, "importmulti", addresses.stream().map(ImportMultiRequest::toJson).collect(Collectors.toList()), options);
+    query(utxoProvider, walletId, "importmulti", addresses.stream().map(ImportMultiRequest::toJson).collect(Collectors.toList()), options);
   }
 
   @Override
@@ -220,6 +230,7 @@ public class BitcoinRPCClient extends RPCClientImpl implements UTXORPCClient {
   public List<ListTransactionResponse> listTransactions(ListTransactionRequest request) {
     return new ListMapWrapper<>(
       (List<Map<String, ?>>) query(
+        request.getUtxoProvider(),
         request.getWalletId(),
         "listtransactions",
         request.getLabel(),

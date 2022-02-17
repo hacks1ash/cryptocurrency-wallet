@@ -64,4 +64,8 @@ public class RPCException extends GenericRpcException {
     super(error.getMessage());
     this.rpcError = error;
   }
+  public RPCException(RPCError error, String message) {
+    super(message);
+    this.rpcError = error;
+  }
 }

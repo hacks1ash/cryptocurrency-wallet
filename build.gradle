@@ -109,9 +109,8 @@ subprojects {
         springValidation 'org.springframework.boot:spring-boot-starter-validation'
 
         // Monitoring
-        apm 'co.elastic.apm:apm-agent-attach:1.25.0'
-        apm 'co.elastic.apm:apm-agent-api:1.25.0'
-        apm 'co.elastic.apm:apm-opentracing:1.25.0'
+        apm 'co.elastic.apm:apm-agent-api:1.28.4'
+        apm 'co.elastic.apm:apm-opentracing:1.28.4'
 
         // Lombok
         lombok 'org.projectlombok:lombok'

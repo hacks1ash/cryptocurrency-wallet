@@ -1,11 +1,14 @@
 package com.hacks1ash.crypto.wallet.blockchain;
 
+import com.hacks1ash.crypto.wallet.blockchain.bitcoin.config.UTXOConfigProperties;
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
 import com.hacks1ash.crypto.wallet.blockchain.model.BatchParam;
 import com.hacks1ash.crypto.wallet.blockchain.model.RPCError;
 import com.hacks1ash.crypto.wallet.blockchain.model.RPCException;
 import com.hacks1ash.crypto.wallet.blockchain.utils.Base64Coder;
 import com.hacks1ash.crypto.wallet.blockchain.utils.JSON;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.util.Pair;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -31,20 +34,11 @@ public abstract class RPCClientImpl implements RPCClient {
 
   private HostnameVerifier hostnameVerifier;
   private SSLSocketFactory sslSocketFactory;
-  private final URL noAuthURL;
-  private final String authStr;
 
-  public RPCClientImpl(String rpcUrl) throws MalformedURLException {
-    this(new URL(rpcUrl));
-  }
+  private final UTXOConfigProperties utxoConfigProperties;
 
-  public RPCClientImpl(URL rpc) {
-    try {
-      noAuthURL = new URI(rpc.getProtocol(), null, rpc.getHost(), rpc.getPort(), rpc.getPath(), rpc.getQuery(), null).toURL();
-    } catch (MalformedURLException | URISyntaxException ex) {
-      throw new IllegalArgumentException(rpc.toString(), ex);
-    }
-    authStr = rpc.getUserInfo() == null ? null : String.valueOf(Base64Coder.encode(rpc.getUserInfo().getBytes(Charset.forName("ISO8859-1"))));
+  public RPCClientImpl(UTXOConfigProperties utxoConfigProperties) {
+    this.utxoConfigProperties = utxoConfigProperties;
   }
 
   public HostnameVerifier getHostnameVerifier() {
@@ -106,7 +100,6 @@ public abstract class RPCClientImpl implements RPCClient {
       log.info(String.format("Bitcoin JSON-RPC response:\n%s", r));
       try {
         Map response = (Map) JSON.parse(r);
-
         return getResponseObject("1", response);
       } catch (ClassCastException ex) {
         throw new RPCException("Invalid server response format (data: \"" + r + "\")");
@@ -146,18 +139,36 @@ public abstract class RPCClientImpl implements RPCClient {
     if (response.get("error") != null)
       throw new RPCException(new RPCError(response));
 
-    return response.get("result");
+    Object result = response.get("result");
+    if (result != null) {
+      if (result instanceof List) {
+        List<Object> resultList = (List<Object>) result;
+        for (Object obj : resultList) {
+          LinkedHashMap map = (LinkedHashMap) obj;
+          boolean success = (boolean) map.get("success");
+          if (!success) {
+            throw new RPCException(new RPCError(response), (String) ((LinkedHashMap) map.get("error")).get("message"));
+          }
+        }
+      }
+    }
+
+    return result;
   }
 
   /**
    * Set an authenticated connection with Bitcoin server
    */
-  private HttpURLConnection setConnection(String walletId) {
+  private HttpURLConnection setConnection(UTXOProvider utxoProvider, String walletId) {
     HttpURLConnection conn;
 
-    URL connectionUrl = noAuthURL;
+
 
     try {
+      Pair<URL, String> urlFromConfig = getURLFromConfig(utxoProvider);
+      URL noAuthURL = urlFromConfig.getFirst();
+      String authStr = urlFromConfig.getSecond();
+      URL connectionUrl = noAuthURL;
 
       if (walletId != null) {
         connectionUrl = new URI(noAuthURL.getProtocol(), null, noAuthURL.getHost(), noAuthURL.getPort(), "/wallet/" + walletId, noAuthURL.getQuery(), noAuthURL.getQuery()).toURL();
@@ -185,17 +196,17 @@ public abstract class RPCClientImpl implements RPCClient {
   }
 
   @Override
-  public Object query(String walletId, String method, Object... o) throws GenericRpcException {
+  public Object query(UTXOProvider utxoProvider, String walletId, String method, Object... o) throws GenericRpcException {
     try {
-      return loadResponse(queryForStream(walletId, method, o));
+      return loadResponse(queryForStream(utxoProvider, walletId, method, o));
     } catch (IOException ex) {
       throw new RPCException(method, Arrays.deepToString(o), ex);
     }
   }
 
   @Override
-  public InputStream queryForStream(String walletId, String method, Object... o) throws GenericRpcException {
-    HttpURLConnection conn = setConnection(walletId);
+  public InputStream queryForStream(UTXOProvider utxoProvider, String walletId, String method, Object... o) throws GenericRpcException {
+    HttpURLConnection conn = setConnection(utxoProvider, walletId);
     try {
       byte[] r = prepareRequest(method, o);
       log.info(String.format("Bitcoin JSON-RPC request:\n%s", new String(r, QUERY_CHARSET)));
@@ -217,8 +228,8 @@ public abstract class RPCClientImpl implements RPCClient {
   }
 
   @Override
-  public Object batchQuery(String walletId, String method, List<BatchParam> batchParams) throws GenericRpcException {
-    HttpURLConnection conn = setConnection(walletId);
+  public Object batchQuery(UTXOProvider utxoProvider, String walletId, String method, List<BatchParam> batchParams) throws GenericRpcException {
+    HttpURLConnection conn = setConnection(utxoProvider, walletId);
     try {
       byte[] r = prepareBatchRequest(method, batchParams);
       log.info(String.format("Bitcoin JSON-RPC request:\n%s", new String(r, QUERY_CHARSET)));
@@ -238,5 +249,20 @@ public abstract class RPCClientImpl implements RPCClient {
       throw new RPCException(method, batchParams.stream()
         .map(param -> Arrays.deepToString(param.params)).collect(Collectors.joining()), ex);
     }
+  }
+
+  private Pair<URL, String> getURLFromConfig(UTXOProvider provider) throws MalformedURLException {
+    URL noAuthURL;
+    String authStr;
+    UTXOConfigProperties.NodeConfig nodeConfig = utxoConfigProperties.getNodes().get(provider);
+    URL rpc = new URL(nodeConfig.getScheme() + "://" + nodeConfig.getUsername() + ":" + nodeConfig.getPassword() + "@" + nodeConfig.getHost() + ":" + nodeConfig.getPort());
+    try {
+      noAuthURL = new URI(rpc.getProtocol(), null, rpc.getHost(), rpc.getPort(), rpc.getPath(), rpc.getQuery(), null).toURL();
+    } catch (MalformedURLException | URISyntaxException ex) {
+      throw new IllegalArgumentException(rpc.toString(), ex);
+    }
+    authStr = rpc.getUserInfo() == null ? null : String.valueOf(Base64Coder.encode(rpc.getUserInfo().getBytes(Charset.forName("ISO8859-1"))));
+
+    return  Pair.of(noAuthURL, authStr);
   }
 }

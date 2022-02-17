@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request;
 
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
 import lombok.*;
 
 @Data
@@ -7,6 +8,9 @@ import lombok.*;
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class EstimateSmartFeeRequest {
+
+  @NonNull
+  private UTXOProvider utxoProvider;
 
   @NonNull
   private Integer confTargetBlock;

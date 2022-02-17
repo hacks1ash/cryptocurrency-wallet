@@ -29,7 +29,7 @@ graphiql:
 spring:
   data:
     mongodb:
-      uri: mongodb+srv://${DATABASE_USER}:${DATABASE_PASS}@${DATABASE_HOST}/${DATABASE_NAME}?retryWrites=true&w=majority
+      uri: ${DATABASE_URL_SCHEMA}://${DATABASE_USER}:${DATABASE_PASS}@${DATABASE_HOST}/${DATABASE_NAME}?retryWrites=true&w=majority
       auto-index-creation: false
   application:
     name: "CryptoCurrency Wallet"
@@ -37,8 +37,7 @@ spring:
 
 logging:
   file:
-    path: ./
-    name: app.log
+    name: ./logs/app.log
 
 # Swagger
 springdoc:
@@ -50,11 +49,22 @@ springdoc:
     operations-sorter: method
   show-actuator: true
 
-# Nodes
-bitcoin:
-  rpcScheme: http
-  rpcHost: ${BITCOIN_RPC_HOST}
-  rpcPort: ${BITCOIN_RPC_PORT}
-  rpcUsername: ${BITCOIN_RPC_USERNAME}
-  rpcPassword: ${BITCOIN_RPC_PASSWORD}
 
+
+# Nodes
+#bitcoin:
+#  rpcScheme: http
+#  rpcHost: ${BITCOIN_RPC_HOST}
+#  rpcPort: ${BITCOIN_RPC_PORT}
+#  rpcUsername: ${BITCOIN_RPC_USERNAME}
+#  rpcPassword: ${BITCOIN_RPC_PASSWORD}
+
+# Nodes
+utxo:
+  nodes:
+    LOCAL_BITCOIN:
+      scheme: http
+      host: ${BITCOIN_RPC_HOST}
+      port: ${BITCOIN_RPC_PORT}
+      username: ${BITCOIN_RPC_USERNAME}
+      password: ${BITCOIN_RPC_PASSWORD}

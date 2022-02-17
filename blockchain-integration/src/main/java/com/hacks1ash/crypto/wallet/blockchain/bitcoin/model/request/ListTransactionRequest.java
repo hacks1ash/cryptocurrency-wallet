@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request;
 
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ListTransactionRequest {
+
+  private UTXOProvider utxoProvider;
 
   private String walletId;
 
@@ -19,14 +22,15 @@ public class ListTransactionRequest {
 
   private boolean includeWatchOnly = true;
 
-  public ListTransactionRequest(String walletId, int count, int skip) {
+  public ListTransactionRequest(UTXOProvider utxoProvider, String walletId, int count, int skip) {
+    this.utxoProvider = utxoProvider;
     this.walletId = walletId;
     this.count = count;
     this.skip = skip;
   }
 
-  public ListTransactionRequest(String walletId, int count) {
-    this(walletId, count, 0);
+  public ListTransactionRequest(UTXOProvider utxoProvider, String walletId, int count) {
+    this(utxoProvider, walletId, count, 0);
   }
 
 }

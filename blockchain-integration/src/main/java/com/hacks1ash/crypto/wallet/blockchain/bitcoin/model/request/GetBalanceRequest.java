@@ -1,5 +1,6 @@
 package com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request;
 
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GetBalanceRequest {
 
+  private UTXOProvider utxoProvider;
+
   private String walletId;
 
   private int minConf = 0;
@@ -17,7 +20,8 @@ public class GetBalanceRequest {
 
   private boolean avoidReuse = false;
 
-  public GetBalanceRequest(String walletId) {
+  public GetBalanceRequest(UTXOProvider utxoProvider, String walletId) {
+    this.utxoProvider = utxoProvider;
     this.walletId = walletId;
   }
 

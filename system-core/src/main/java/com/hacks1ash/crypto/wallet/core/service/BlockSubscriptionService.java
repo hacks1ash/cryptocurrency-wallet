@@ -5,7 +5,6 @@ import com.hacks1ash.crypto.wallet.core.BlockListener;
 import com.hacks1ash.crypto.wallet.core.model.CryptoCurrency;
 import com.hacks1ash.crypto.wallet.core.model.request.NewBlock;
 import com.hacks1ash.crypto.wallet.core.storage.WalletRepository;
-import com.hacks1ash.crypto.wallet.core.utils.BlockchainIntegrationFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +15,7 @@ public class BlockSubscriptionService implements BlockListener {
 
   private WalletRepository walletRepository;
 
-  private BlockchainIntegrationFactory blockchainIntegrationFactory;
+//  private BlockchainIntegrationFactory blockchainIntegrationFactory;
 
   @PostConstruct
   void onStartup() {
@@ -24,8 +23,8 @@ public class BlockSubscriptionService implements BlockListener {
 
   @Override
   public void onBlock(NewBlock newBlock) {
-    CryptoCurrency cryptoCurrency = CryptoCurrency.cryptoCurrencyFromShortName(newBlock.getCoin());
-    UTXORPCClient rpcClient = blockchainIntegrationFactory.getRPCClient(cryptoCurrency);
+//    CryptoCurrency cryptoCurrency = CryptoCurrency.cryptoCurrencyFromShortName(newBlock.getCoin());
+//    UTXORPCClient rpcClient = blockchainIntegrationFactory.getRPCClient(cryptoCurrency);
   }
 
   @Autowired
@@ -33,8 +32,8 @@ public class BlockSubscriptionService implements BlockListener {
     this.walletRepository = walletRepository;
   }
 
-  @Autowired
-  public void setBlockchainIntegrationFactory(BlockchainIntegrationFactory blockchainIntegrationFactory) {
-    this.blockchainIntegrationFactory = blockchainIntegrationFactory;
-  }
+//  @Autowired
+//  public void setBlockchainIntegrationFactory(BlockchainIntegrationFactory blockchainIntegrationFactory) {
+//    this.blockchainIntegrationFactory = blockchainIntegrationFactory;
+//  }
 }

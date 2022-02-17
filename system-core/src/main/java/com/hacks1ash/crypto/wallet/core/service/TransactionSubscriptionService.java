@@ -3,6 +3,7 @@ package com.hacks1ash.crypto.wallet.core.service;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.GetTransactionRequest;
 import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.GetTrasactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOClientFactory;
 import com.hacks1ash.crypto.wallet.core.TransactionListener;
 import com.hacks1ash.crypto.wallet.core.model.CryptoCurrency;
 import com.hacks1ash.crypto.wallet.core.model.WebhookStatus;
@@ -13,7 +14,6 @@ import com.hacks1ash.crypto.wallet.core.storage.WalletRepository;
 import com.hacks1ash.crypto.wallet.core.storage.document.CurrencyConfig;
 import com.hacks1ash.crypto.wallet.core.storage.document.Wallet;
 import com.hacks1ash.crypto.wallet.core.storage.document.Webhook;
-import com.hacks1ash.crypto.wallet.core.utils.BlockchainIntegrationFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,13 +29,13 @@ public class TransactionSubscriptionService implements TransactionListener {
 
   private CurrencyConfigRepository currencyConfigRepository;
 
-  private BlockchainIntegrationFactory blockchainIntegrationFactory;
+  private UTXOClientFactory utxoClientFactory;
 
 
   @Override
   public void onTransaction(NewTransaction newTransaction) {
     CryptoCurrency cryptoCurrency = CryptoCurrency.cryptoCurrencyFromShortName(newTransaction.getCoin());
-    UTXORPCClient rpcClient = blockchainIntegrationFactory.getRPCClient(cryptoCurrency);
+    UTXORPCClient rpcClient = utxoClientFactory.getClient(cryptoCurrency.getUtxoProvider());
 
     Optional<CurrencyConfig> currencyConfig = currencyConfigRepository.findByCurrency(cryptoCurrency);
     int confirmationTarget = currencyConfig.map(CurrencyConfig::getNumberOfConfirmationsRequired).orElse(6);
@@ -49,7 +49,7 @@ public class TransactionSubscriptionService implements TransactionListener {
 
     List<Wallet> wallets = new ArrayList<>(walletsByDepositAddresses);
     Wallet wallet = wallets.get(0);
-    GetTrasactionResponse transaction = rpcClient.getTransaction(new GetTransactionRequest(wallet.getNodeWalletNameAlias(), newTransaction.getTxid()));
+    GetTrasactionResponse transaction = rpcClient.getTransaction(new GetTransactionRequest(cryptoCurrency.getUtxoProvider(), wallet.getNodeWalletNameAlias(), newTransaction.getTxid()));
 
     WebhookTXStatus txStatus;
 
@@ -87,7 +87,7 @@ public class TransactionSubscriptionService implements TransactionListener {
   }
 
   @Autowired
-  public void setBlockchainIntegrationFactory(BlockchainIntegrationFactory blockchainIntegrationFactory) {
-    this.blockchainIntegrationFactory = blockchainIntegrationFactory;
+  public void setBlockchainIntegrationFactory(UTXOClientFactory utxoClientFactory) {
+    this.utxoClientFactory = utxoClientFactory;
   }
 }
