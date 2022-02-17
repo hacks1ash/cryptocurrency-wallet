@@ -52,17 +52,9 @@ springdoc:
 
 
 # Nodes
-#bitcoin:
-#  rpcScheme: http
-#  rpcHost: ${BITCOIN_RPC_HOST}
-#  rpcPort: ${BITCOIN_RPC_PORT}
-#  rpcUsername: ${BITCOIN_RPC_USERNAME}
-#  rpcPassword: ${BITCOIN_RPC_PASSWORD}
-
-# Nodes
 utxo:
   nodes:
-    LOCAL_BITCOIN:
+    TEST_BITCOIN:
       scheme: http
       host: ${BITCOIN_RPC_HOST}
       port: ${BITCOIN_RPC_PORT}

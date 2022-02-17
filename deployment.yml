@@ -35,6 +35,11 @@ spec:
                 secretKeyRef:
                   name: ows-core-secrets
                   key: DATABASE_USER
+            - name: DATABASE_URL_SCHEMA
+              valueFrom:
+                secretKeyRef:
+                  name: ows-core-secrets
+                  key: DATABASE_URL_SCHEMA
             - name: DATABASE_PASS
               valueFrom:
                 secretKeyRef:
