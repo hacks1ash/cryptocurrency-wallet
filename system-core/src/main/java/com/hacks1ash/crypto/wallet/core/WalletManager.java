@@ -22,6 +22,7 @@ public interface WalletManager {
 
   EstimateFeeResponse estimateFee(String walletId, TransactionRequest request);
 
+  // TODO add password while sending tx
   SendTransactionResponse sendTransaction(String walletId, TransactionRequest request);
 
   GetTransactionResponse getTransaction(String walletId, String txId);

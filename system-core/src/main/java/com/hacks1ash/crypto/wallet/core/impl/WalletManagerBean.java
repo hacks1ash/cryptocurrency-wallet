@@ -85,7 +85,7 @@ public class WalletManagerBean implements WalletManager {
             new HashMap<String, String>() {{
               put("address", address.getAddress());
             }},
-            null,
+            address.getRedeemScript(),
             null,
             Collections.singletonList(address.getPrivateKey()),
             true,
@@ -158,7 +158,7 @@ public class WalletManagerBean implements WalletManager {
               new HashMap<String, String>() {{
                 put("address", address.getAddress());
               }},
-              null,
+              address.getRedeemScript(),
               null,
               Collections.singletonList(address.getPrivateKey()),
               false,
@@ -166,16 +166,6 @@ public class WalletManagerBean implements WalletManager {
             )
           ),
           false
-        );
-
-        rpcClient.importPrivateKey(
-          new ImportPrivateKeyRequest(
-            wallet.getCurrency().getUtxoProvider(),
-            walletId,
-            address.getPrivateKey(),
-            request.getName(),
-            false
-          )
         );
 
         wallet.getAddresses().add(new Address(request.getName(), address.getAddress(), request.getAddressType(), addressIndex));

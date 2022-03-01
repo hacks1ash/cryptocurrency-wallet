@@ -60,7 +60,7 @@ public class NodeWalletConfigStarter {
               new HashMap<String, String>() {{
                 put("address", changeAddress.getAddress());
               }},
-              null,
+              changeAddress.getRedeemScript(),
               null,
               Collections.singletonList(changeAddress.getPrivateKey()),
               true,
@@ -89,7 +89,7 @@ public class NodeWalletConfigStarter {
                 new HashMap<String, String>() {{
                   put("address", newAddress.getAddress());
                 }},
-                null,
+                newAddress.getRedeemScript(),
                 null,
                 Collections.singletonList(newAddress.getPrivateKey()),
                 false,

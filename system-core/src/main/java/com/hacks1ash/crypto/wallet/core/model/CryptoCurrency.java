@@ -13,7 +13,10 @@ public enum CryptoCurrency {
 
   BITCOIN("btc", NetworkParams.MAINNET, FeeUnit.SATOSHI, 8, UTXOProvider.BITCOIN),
   TEST_BITCOIN("tbtc", NetworkParams.TESTNET, FeeUnit.SATOSHI, 8, UTXOProvider.TEST_BITCOIN),
-  LOCAL_BITCOIN("lbtc", NetworkParams.LOCAL, FeeUnit.SATOSHI, 8, UTXOProvider.LOCAL_BITCOIN);
+  LOCAL_BITCOIN("lbtc", NetworkParams.LOCAL, FeeUnit.SATOSHI, 8, UTXOProvider.LOCAL_BITCOIN),
+  LITECOIN("ltc", NetworkParams.MAINNET, FeeUnit.LITOSHI, 8, UTXOProvider.LITECOIN),
+  TEST_LITECOIN("tltc", NetworkParams.TESTNET, FeeUnit.LITOSHI, 8, UTXOProvider.TEST_LITECOIN),
+  LOCAL_LITECOIN("lltc", NetworkParams.LOCAL, FeeUnit.LITOSHI, 8, UTXOProvider.LOCAL_LITECOIN);
 
   private final String shortName;
   private final NetworkParams networkParams;

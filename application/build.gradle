@@ -8,8 +8,9 @@ bootJar {
 
 dependencies {
     implementation project(':system-core')
-    implementation project(':blockchain-integration')
     implementation project(':controller')
+    implementation project(':blockchain-integration:bitcoin-cash')
+    implementation project(':blockchain-integration:core')
 }
 
 configurations {
@@ -36,4 +37,5 @@ configurations {
     implementation.extendsFrom(bitcoinJ)
     implementation.extendsFrom(guava)
     implementation.extendsFrom(graphql)
+    implementation.extendsFrom(javaX)
 }

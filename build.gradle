@@ -92,6 +92,8 @@ subprojects {
         bitcoinJ
         guava
         graphql
+
+        javaX
     }
 
     dependencies {
@@ -125,6 +127,8 @@ subprojects {
         graphql 'com.graphql-java:graphql-spring-boot-starter:5.0.2'
         graphql 'com.graphql-java:graphql-java-tools:5.2.4'
         graphql 'com.graphql-java:graphql-java:8.0'
+
+        javaX 'javax.xml.bind:jaxb-api:2.2.4'
 
         // Testing
         springBootStarterTest('org.springframework.boot:spring-boot-starter-test') {

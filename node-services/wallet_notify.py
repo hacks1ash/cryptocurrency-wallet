@@ -20,8 +20,7 @@ logger = logging.getLogger("cwsSocketServer")
 
 parser = argparse.ArgumentParser(description='Wallet notify script')
 
-parser.add_argument("txid", metavar='N', type=str, nargs='+',
-                    help='txid which changed')
+parser.add_argument("txid", metavar='N', type=str, nargs='+', help='txid which changed')
 
 args = parser.parse_args()
 txids = args.txid
@@ -52,10 +51,10 @@ if block_hash:
     block_height = block_json.get("height")
     logger.info(f"BLOCK HEIGHT: {block_height}")
 
+logger.info(json_data)
 try:
-    logger.info(json_data)
     vins = json_data.get("vin")
-    vouts = json_data.get("vout")
+
     for vin in vins:
         v_txid = vin.get("txid")
         vout_index = vin.get("vout")
@@ -66,12 +65,19 @@ try:
         json_data_v = json.loads(raw_transaction)
         vouts_v = json_data_v.get("vout")
         output = vouts_v[int(vout_index)]
-        addresses.append(output.get("scriptPubKey").get("addresses")[0])
+        addresses.append(output.get("scriptPubKey").get("address"))
+
+except Exception as e:
+    logger.info(e)
+
+try:
+    vouts = json_data.get("vout")
 
     for vout in vouts:
         scr = vout.get("scriptPubKey")
-        address = scr.get("addresses")[0]
+        address = scr.get("address")
         addresses.append(address)
+
 except Exception as e:
     logger.info(e)
 

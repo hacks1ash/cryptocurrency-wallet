@@ -1,7 +1,7 @@
 import os
 
 COIN_NAME = "/usr/local/bin/bitcoin-cli"
-COIN_TICKER = "tbtc"
+COIN_TICKER = "lbtc"
 CONF_PATH = "/home/ubuntu/.bitcoin/bitcoin.conf"
 
 NOTIFY_URLS = [

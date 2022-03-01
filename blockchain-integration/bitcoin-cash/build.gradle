@@ -13,7 +13,8 @@ jar {
 group 'com.hacks1ash.crypto.wallet'
 
 dependencies {
-    compileOnly project(':blockchain-integration:core')
+    implementation files('bitcoinj-core-0.25.jar')
+    compileOnly project(":blockchain-integration:core")
 }
 
 configurations {
@@ -22,11 +23,7 @@ configurations {
 
     compileOnly.extendsFrom(springWeb)
     compileOnly.extendsFrom(springData)
-    compileOnly.extendsFrom(springWebsocket)
     compileOnly.extendsFrom(lombok)
-    compileOnly.extendsFrom(bitcoinJ)
-    compileOnly.extendsFrom(guava)
-    compileOnly.extendsFrom(springDocs)
-    compileOnly.extendsFrom(springValidation)
     compileOnly.extendsFrom(apm)
+    compileOnly.extendsFrom(javaX)
 }

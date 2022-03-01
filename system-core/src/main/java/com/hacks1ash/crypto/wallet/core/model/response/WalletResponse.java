@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+// TODO add ticker to response
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

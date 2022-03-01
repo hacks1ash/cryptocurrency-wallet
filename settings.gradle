@@ -1,6 +1,8 @@
 rootProject.name = projectName
 include 'application'
 include 'system-core'
-include 'blockchain-integration'
 include 'controller'
+
+include 'blockchain-integration:core'
+include 'blockchain-integration:bitcoin-cash'
 
