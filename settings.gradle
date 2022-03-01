@@ -5,4 +5,8 @@ include 'controller'
 
 include 'blockchain-integration:core'
 include 'blockchain-integration:bitcoin-cash'
+include 'blockchain-integration:bitcoin'
+findProject(':blockchain-integration:bitcoin')?.name = 'bitcoin'
+include 'blockchain-integration:litecoin'
+findProject(':blockchain-integration:litecoin')?.name = 'litecoin'
 

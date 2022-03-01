@@ -1,7 +1,7 @@
 package com.hacks1ash.crypto.wallet.core.model.response;
 
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.GetTrasactionResponse;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.ListTransactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.model.response.GetTrasactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.model.response.ListTransactionResponse;
 import com.hacks1ash.crypto.wallet.core.model.CryptoCurrency;
 import com.hacks1ash.crypto.wallet.core.model.TransactionRecipient;
 import com.hacks1ash.crypto.wallet.core.model.TransactionType;

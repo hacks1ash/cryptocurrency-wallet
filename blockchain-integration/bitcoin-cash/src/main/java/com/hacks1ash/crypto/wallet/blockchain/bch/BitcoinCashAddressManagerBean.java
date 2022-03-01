@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
-@AddressQualifier(providers = {UTXOProvider.BITCOIN_CASH, UTXOProvider.TEST_BITCOIN_CASH, UTXOProvider.LOCAL_BITCOIN_CASH})
+@AddressQualifier(providers = {UTXOProvider.BITCOIN_CASH})
 public class BitcoinCashAddressManagerBean implements UTXOAddressManager {
 
   private static final Map<NetworkParams, NetworkParameters> networkParamsUTXOProviderMap = new HashMap<>();

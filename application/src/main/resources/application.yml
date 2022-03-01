@@ -54,15 +54,19 @@ springdoc:
 # Nodes
 utxo:
   nodes:
-    LOCAL_BITCOIN:
+    BITCOIN:
+      enabled: ${BITCOIN_ENABLED}
       scheme: http
-      host: ${BITCOIN_RPC_HOST}
-      port: ${BITCOIN_RPC_PORT}
-      username: ${BITCOIN_RPC_USERNAME}
-      password: ${BITCOIN_RPC_PASSWORD}
-    LOCAL_LITECOIN:
+      host: ${BITCOIN_RPC_HOST:}
+      port: ${BITCOIN_RPC_PORT:}
+      username: ${BITCOIN_RPC_USERNAME:}
+      password: ${BITCOIN_RPC_PASSWORD:}
+      network: ${BITCOIN_NETWORK:}
+    LITECOIN:
+      enabled: ${LITECOIN_ENABLED}
       scheme: http
       host: ${LITECOIN_RPC_HOST:}
       port: ${LITECOIN_RPC_PORT:}
       username: ${LITECOIN_RPC_USERNAME:}
       password: ${LITECOIN_RPC_PASSWORD:}
+      network: ${LITECOIN_NETWORK:}

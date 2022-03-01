@@ -8,15 +8,7 @@ import lombok.Getter;
 public enum UTXOProvider {
 
   BITCOIN,
-  TEST_BITCOIN,
-  LOCAL_BITCOIN,
-
   LITECOIN,
-  TEST_LITECOIN,
-  LOCAL_LITECOIN,
-
-  BITCOIN_CASH,
-  TEST_BITCOIN_CASH,
-  LOCAL_BITCOIN_CASH;
+  BITCOIN_CASH;
 
 }

@@ -1,17 +1,14 @@
 package com.hacks1ash.crypto.wallet.core.model.request;
 
 import com.hacks1ash.crypto.wallet.core.WalletException;
-import com.hacks1ash.crypto.wallet.core.model.TransactionRecipient;
 import com.hacks1ash.crypto.wallet.core.model.TransactionSpeed;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.math.BigInteger;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class TransactionRequest extends AbstractRequest {
+public class TransactionRequest implements AbstractRequest {
 
   private List<TransactionRecipientRequest> recipients;
 

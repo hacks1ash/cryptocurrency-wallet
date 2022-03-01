@@ -5,6 +5,7 @@ import com.hacks1ash.crypto.wallet.core.WalletManager;
 import com.hacks1ash.crypto.wallet.core.model.request.AddressCreationRequest;
 import com.hacks1ash.crypto.wallet.core.model.request.TransactionRequest;
 import com.hacks1ash.crypto.wallet.core.model.request.WalletCreationRequest;
+import com.hacks1ash.crypto.wallet.core.model.request.WebhookCreationRequest;
 import com.hacks1ash.crypto.wallet.core.model.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -206,7 +206,6 @@ public class WalletController {
     return walletManager.getTransaction(walletId, txId);
   }
 
-
   @Operation(
     method = "getTransactions",
     summary = "Get wallet transaction list",
@@ -224,6 +223,53 @@ public class WalletController {
   @CaptureTransaction
   public List<GetTransactionResponse> getTransactions(@PathVariable String walletId) {
     return walletManager.getTransactions(walletId);
+  }
+
+  @Operation(
+          method = "registerWebhookForWallet",
+          summary = "Register Webhook for wallet",
+          parameters = {
+                  @Parameter(name = "walletId", required = true, description = "Wallet ID returned in wallet creation request")
+          },
+          requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                  description = "'url' is required. Url is where webhooks will be posted. confirmationTarget is not required. If null will use default config for currency",
+                  required = true,
+                  content = @Content(
+                          schema = @Schema(
+                                  implementation = WebhookCreationRequest.class
+                          )
+                  )
+          ),
+          responses = {
+                  @ApiResponse(responseCode = "200", description = "Webhook", content = @Content(schema = @Schema(implementation = WebhookResponse.class))),
+                  @ApiResponse(responseCode = "400", description = "Invalid parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                  @ApiResponse(responseCode = "404", description = "Unable to find wallet/transaction", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                  @ApiResponse(responseCode = "500", description = "Something unexpected happened", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          }
+  )
+  @RequestMapping(value = "/{walletId}/webhook", method = RequestMethod.POST)
+  @CaptureTransaction
+  public WebhookResponse registerWebhookForWallet(@PathVariable String walletId, @RequestBody WebhookCreationRequest request) {
+    return walletManager.createWebhook(walletId, request.validate());
+  }
+
+  @Operation(
+    method = "getWebhooks",
+    summary = "Get wallet webhook list",
+    parameters = {
+      @Parameter(name = "walletId", required = true, description = "Wallet ID returned in wallet creation request")
+    },
+    responses = {
+      @ApiResponse(responseCode = "200", description = "Webhooks", content = @Content(array = @ArraySchema(schema =  @Schema(implementation = WebhookResponse.class)))),
+      @ApiResponse(responseCode = "400", description = "Invalid parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "Unable to find wallet/transaction", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "500", description = "Something unexpected happened", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    }
+  )
+  @RequestMapping(value = "/{walletId}/webhook", method = RequestMethod.GET)
+  @CaptureTransaction
+  public List<WebhookResponse> getWebhooks(@PathVariable String walletId) {
+    return walletManager.getWebhooks(walletId);
   }
 
   @Autowired

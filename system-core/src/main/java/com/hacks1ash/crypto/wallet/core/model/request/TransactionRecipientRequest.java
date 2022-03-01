@@ -1,16 +1,12 @@
 package com.hacks1ash.crypto.wallet.core.model.request;
 
 import com.hacks1ash.crypto.wallet.core.WalletException;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class TransactionRecipientRequest extends AbstractRequest {
+public class TransactionRecipientRequest implements AbstractRequest {
 
   private String address;
 

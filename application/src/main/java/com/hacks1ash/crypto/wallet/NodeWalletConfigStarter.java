@@ -3,11 +3,11 @@ package com.hacks1ash.crypto.wallet;
 import com.hacks1ash.crypto.wallet.blockchain.GenericRpcException;
 import com.hacks1ash.crypto.wallet.blockchain.UTXOAddressManager;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.CreateWalletRequest;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.ImportMultiRequest;
 import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOClientFactory;
 import com.hacks1ash.crypto.wallet.blockchain.model.AddressType;
 import com.hacks1ash.crypto.wallet.blockchain.model.AddressWithPrivate;
+import com.hacks1ash.crypto.wallet.blockchain.model.request.CreateWalletRequest;
+import com.hacks1ash.crypto.wallet.blockchain.model.request.ImportMultiRequest;
 import com.hacks1ash.crypto.wallet.core.model.Address;
 import com.hacks1ash.crypto.wallet.core.storage.WalletRepository;
 import com.hacks1ash.crypto.wallet.core.storage.document.Wallet;
@@ -47,7 +47,8 @@ public class NodeWalletConfigStarter {
             wallet.getCurrency().getUtxoProvider(),
             wallet.getNodeWalletNameAlias(),
             true
-          )
+          ),
+          wallet.getCurrency().getNetworkParams()
         );
 
         AddressWithPrivate changeAddress = addressManager.createAddress(wallet.getHdSeed(), AddressType.BECH_32, wallet.getCurrency().getNetworkParams(), 0, wallet.getCreationTimestamp());
@@ -67,7 +68,8 @@ public class NodeWalletConfigStarter {
               null
             )
           ),
-          false
+          false,
+          wallet.getCurrency().getNetworkParams()
         );
 
         needsRescan = true;
@@ -96,7 +98,8 @@ public class NodeWalletConfigStarter {
                 address.getName()
               )
             ),
-            false
+            false,
+            wallet.getCurrency().getNetworkParams()
           );
           addressIndex++;
           needsRescan = true;

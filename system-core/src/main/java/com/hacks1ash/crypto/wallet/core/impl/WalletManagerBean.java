@@ -4,14 +4,14 @@ import co.elastic.apm.api.CaptureSpan;
 import com.hacks1ash.crypto.wallet.blockchain.GenericRpcException;
 import com.hacks1ash.crypto.wallet.blockchain.UTXOAddressManager;
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.*;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.FundRawTransactionResponse;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.GetTrasactionResponse;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.ListTransactionResponse;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.SignRawTransactionWithWalletResponse;
 import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOClientFactory;
 import com.hacks1ash.crypto.wallet.blockchain.model.AddressType;
 import com.hacks1ash.crypto.wallet.blockchain.model.AddressWithPrivate;
+import com.hacks1ash.crypto.wallet.blockchain.model.request.*;
+import com.hacks1ash.crypto.wallet.blockchain.model.response.FundRawTransactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.model.response.GetTrasactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.model.response.ListTransactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.model.response.SignRawTransactionWithWalletResponse;
 import com.hacks1ash.crypto.wallet.core.WalletException;
 import com.hacks1ash.crypto.wallet.core.WalletManager;
 import com.hacks1ash.crypto.wallet.core.model.Address;
@@ -19,16 +19,16 @@ import com.hacks1ash.crypto.wallet.core.model.CryptoCurrency;
 import com.hacks1ash.crypto.wallet.core.model.request.AddressCreationRequest;
 import com.hacks1ash.crypto.wallet.core.model.request.TransactionRequest;
 import com.hacks1ash.crypto.wallet.core.model.request.WalletCreationRequest;
+import com.hacks1ash.crypto.wallet.core.model.request.WebhookCreationRequest;
 import com.hacks1ash.crypto.wallet.core.model.response.*;
+import com.hacks1ash.crypto.wallet.core.storage.CurrencyConfigRepository;
 import com.hacks1ash.crypto.wallet.core.storage.WalletRepository;
+import com.hacks1ash.crypto.wallet.core.storage.WebhookSubscriptionRepository;
 import com.hacks1ash.crypto.wallet.core.storage.document.Wallet;
+import com.hacks1ash.crypto.wallet.core.storage.document.WebhookSubscription;
 import com.hacks1ash.crypto.wallet.core.utils.CurrencyUtils;
 import com.hacks1ash.crypto.wallet.core.utils.MnemonicWords;
 import com.hacks1ash.crypto.wallet.core.utils.WalletUtils;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.crypto.HDKeyDerivation;
-import org.bitcoinj.wallet.DeterministicSeed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +46,10 @@ public class WalletManagerBean implements WalletManager {
   private MnemonicWords mnemonicWords;
 
   private UTXOClientFactory utxoClientFactory;
+
+  private CurrencyConfigRepository currencyConfigRepository;
+
+  private WebhookSubscriptionRepository webhookSubscriptionRepository;
 
   @Override
   @CaptureSpan
@@ -68,7 +72,7 @@ public class WalletManagerBean implements WalletManager {
       long creationTimestamp = Instant.now().getEpochSecond();
       String nodeWalletName = UUID.randomUUID().toString();
       try {
-        rpcClient.createWallet(new CreateWalletRequest(cryptoCurrency.getUtxoProvider(), nodeWalletName, true));
+        rpcClient.createWallet(new CreateWalletRequest(cryptoCurrency.getUtxoProvider(), nodeWalletName, true), cryptoCurrency.getNetworkParams());
       } catch (GenericRpcException ex) {
         throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
       }
@@ -92,7 +96,8 @@ public class WalletManagerBean implements WalletManager {
             null
           )
         ),
-        false
+        false,
+        cryptoCurrency.getNetworkParams()
       );
 
       Wallet wallet = walletRepository.save(
@@ -129,7 +134,7 @@ public class WalletManagerBean implements WalletManager {
       Wallet wallet = optionalWallet.get();
       UTXORPCClient rpcClient = utxoClientFactory.getClient(wallet.getCurrency().getUtxoProvider());
       synchronized (wallet) {
-        BigDecimal resp = rpcClient.getBalance(new GetBalanceRequest(wallet.getCurrency().getUtxoProvider(), wallet.getNodeWalletNameAlias()));
+        BigDecimal resp = rpcClient.getBalance(new GetBalanceRequest(wallet.getCurrency().getUtxoProvider(), wallet.getNodeWalletNameAlias()), wallet.getCurrency().getNetworkParams());
         return CurrencyUtils.toMinorUnit(wallet.getCurrency(), resp);
       }
     }
@@ -165,7 +170,8 @@ public class WalletManagerBean implements WalletManager {
               request.getName()
             )
           ),
-          false
+          false,
+          wallet.getCurrency().getNetworkParams()
         );
 
         wallet.getAddresses().add(new Address(request.getName(), address.getAddress(), request.getAddressType(), addressIndex));
@@ -221,8 +227,8 @@ public class WalletManagerBean implements WalletManager {
       synchronized (wallet) {
         try {
           FundRawTransactionResponse fundRawTransactionResponse = WalletUtils.fundRawTransaction(request, wallet, currency, rpcClient);
-          SignRawTransactionWithWalletResponse singRawTransactionWithWallet = rpcClient.singRawTransactionWithWallet(currency.getUtxoProvider(), wallet.getNodeWalletNameAlias(), fundRawTransactionResponse.getHex());
-          String finalTxId = rpcClient.sendRawTransaction(currency.getUtxoProvider(), singRawTransactionWithWallet.getTxHex());
+          SignRawTransactionWithWalletResponse singRawTransactionWithWallet = rpcClient.singRawTransactionWithWallet(currency.getUtxoProvider(), wallet.getNodeWalletNameAlias(), fundRawTransactionResponse.getHex(), currency.getNetworkParams());
+          String finalTxId = rpcClient.sendRawTransaction(currency.getUtxoProvider(), singRawTransactionWithWallet.getTxHex(), currency.getNetworkParams());
           GetTransactionResponse transaction = getTransaction(wallet.getId(), finalTxId);
           return new SendTransactionResponse(transaction.getTxId(), transaction.getParticipants(), transaction.getBlockchainFee(), currency.getFeeUnit());
         } catch (GenericRpcException ex) {
@@ -242,7 +248,7 @@ public class WalletManagerBean implements WalletManager {
       CryptoCurrency currency = wallet.getCurrency();
       UTXORPCClient rpcClient = utxoClientFactory.getClient(wallet.getCurrency().getUtxoProvider());
       synchronized (wallet) {
-        GetTrasactionResponse getTrasactionResponse = rpcClient.getTransaction(new GetTransactionRequest(currency.getUtxoProvider(), wallet.getNodeWalletNameAlias(), txId));
+        GetTrasactionResponse getTrasactionResponse = rpcClient.getTransaction(new GetTransactionRequest(currency.getUtxoProvider(), wallet.getNodeWalletNameAlias(), txId), currency.getNetworkParams());
         return new GetTransactionResponse(getTrasactionResponse, currency);
       }
     }
@@ -262,7 +268,8 @@ public class WalletManagerBean implements WalletManager {
             currency.getUtxoProvider(),
             wallet.getNodeWalletNameAlias(),
             Integer.MAX_VALUE
-          )
+          ),
+          currency.getNetworkParams()
         );
         List<GetTransactionResponse> result = new ArrayList<>();
         for (ListTransactionResponse listTransactionResponse : listTransactionResponses) {
@@ -272,6 +279,27 @@ public class WalletManagerBean implements WalletManager {
       }
     }
     throw new WalletException.WalletNotFound(walletId);
+  }
+
+  @Override
+  public WebhookResponse createWebhook(String walletId, WebhookCreationRequest request) {
+    Wallet wallet = walletRepository.findById(walletId).orElseThrow(() -> new WalletException.WalletNotFound(walletId));
+
+    Long confTarget = request.getConfirmationTarget();
+
+    if (request.getConfirmationTarget() == null) {
+      confTarget = currencyConfigRepository.findByCurrency(wallet.getCurrency()).orElseThrow(() -> new WalletException("currency.config.not.found", "Default Currency Config not found for " + wallet.getCurrency().name(), 400)).getNumberOfConfirmationsRequired();
+    }
+
+    WebhookSubscription webhook = webhookSubscriptionRepository.save(new WebhookSubscription(walletId, wallet.getCurrency(), confTarget, request.getUrl()));
+
+    return new WebhookResponse(webhook.getId(), webhook.getId(), webhook.getCurrency(), webhook.getConfirmations(), webhook.getEndpoint());
+  }
+
+  @Override
+  public List<WebhookResponse> getWebhooks(String walletId) {
+    List<WebhookSubscription> subscriptions = webhookSubscriptionRepository.findAllByWalletId(walletId);
+    return subscriptions.stream().map(subscription -> new WebhookResponse(subscription.getId(), subscription.getWalletId(), subscription.getCurrency(), subscription.getConfirmations(), subscription.getEndpoint())).collect(Collectors.toList());
   }
 
   @Autowired
@@ -287,5 +315,15 @@ public class WalletManagerBean implements WalletManager {
   @Autowired
   public void setUTXOClientFactory(UTXOClientFactory utxoClientFactory) {
     this.utxoClientFactory = utxoClientFactory;
+  }
+
+  @Autowired
+  public void setCurrencyConfigRepository(CurrencyConfigRepository currencyConfigRepository) {
+    this.currencyConfigRepository = currencyConfigRepository;
+  }
+
+  @Autowired
+  public void setWebhookSubscriptionRepository(WebhookSubscriptionRepository webhookSubscriptionRepository) {
+    this.webhookSubscriptionRepository = webhookSubscriptionRepository;
   }
 }

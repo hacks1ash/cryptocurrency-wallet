@@ -3,6 +3,7 @@ package com.hacks1ash.crypto.wallet.blockchain;
 import com.hacks1ash.crypto.wallet.blockchain.config.UTXOConfigProperties;
 import com.hacks1ash.crypto.wallet.blockchain.factory.UTXOProvider;
 import com.hacks1ash.crypto.wallet.blockchain.model.BatchParam;
+import com.hacks1ash.crypto.wallet.blockchain.model.NetworkParams;
 import com.hacks1ash.crypto.wallet.blockchain.model.RPCError;
 import com.hacks1ash.crypto.wallet.blockchain.model.RPCException;
 import com.hacks1ash.crypto.wallet.blockchain.utils.Base64Coder;
@@ -31,14 +32,28 @@ public abstract class RPCClientImpl implements RPCClient {
   private static final Charset QUERY_CHARSET = Charset.forName("ISO8859-1");
   private static final int CONNECT_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(1);
   private static final int READ_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(5);
-
+  private final UTXOConfigProperties utxoConfigProperties;
   private HostnameVerifier hostnameVerifier;
   private SSLSocketFactory sslSocketFactory;
 
-  private final UTXOConfigProperties utxoConfigProperties;
-
   public RPCClientImpl(UTXOConfigProperties utxoConfigProperties) {
     this.utxoConfigProperties = utxoConfigProperties;
+  }
+
+  private static byte[] loadStream(InputStream in) throws IOException {
+    ByteArrayOutputStream o = new ByteArrayOutputStream();
+    byte[] buffer = new byte[1024];
+    for (; ; ) {
+      int nr = in.read(buffer);
+
+      if (nr == -1)
+        break;
+      if (nr == 0)
+        throw new IOException("Read timed out");
+
+      o.write(buffer, 0, nr);
+    }
+    return o.toByteArray();
   }
 
   public HostnameVerifier getHostnameVerifier() {
@@ -77,22 +92,6 @@ public abstract class RPCClientImpl implements RPCClient {
     }).collect(Collectors.toList())).getBytes(QUERY_CHARSET);
   }
 
-  private static byte[] loadStream(InputStream in) throws IOException {
-    ByteArrayOutputStream o = new ByteArrayOutputStream();
-    byte[] buffer = new byte[1024];
-    for (; ; ) {
-      int nr = in.read(buffer);
-
-      if (nr == -1)
-        break;
-      if (nr == 0)
-        throw new IOException("Read timed out");
-
-      o.write(buffer, 0, nr);
-    }
-    return o.toByteArray();
-  }
-
   @SuppressWarnings("rawtypes")
   private Object loadResponse(InputStream in) throws IOException, GenericRpcException {
     try (in) {
@@ -107,7 +106,7 @@ public abstract class RPCClientImpl implements RPCClient {
     }
   }
 
-  @SuppressWarnings({"rawtypes","unchecked", "unsafe"})
+  @SuppressWarnings({"rawtypes", "unchecked", "unsafe"})
   private Object loadBatchResponse(InputStream in, List<BatchParam> batchParams) throws IOException, GenericRpcException {
     try (in) {
       String r = new String(loadStream(in), QUERY_CHARSET);
@@ -159,13 +158,11 @@ public abstract class RPCClientImpl implements RPCClient {
   /**
    * Set an authenticated connection with Bitcoin server
    */
-  private HttpURLConnection setConnection(UTXOProvider utxoProvider, String walletId) {
+  private HttpURLConnection setConnection(UTXOProvider utxoProvider, String walletId, NetworkParams networkParams) {
     HttpURLConnection conn;
 
-
-
     try {
-      Pair<URL, String> urlFromConfig = getURLFromConfig(utxoProvider);
+      Pair<URL, String> urlFromConfig = getURLFromConfig(utxoProvider, networkParams);
       URL noAuthURL = urlFromConfig.getFirst();
       String authStr = urlFromConfig.getSecond();
       URL connectionUrl = noAuthURL;
@@ -196,17 +193,17 @@ public abstract class RPCClientImpl implements RPCClient {
   }
 
   @Override
-  public Object query(UTXOProvider utxoProvider, String walletId, String method, Object... o) throws GenericRpcException {
+  public Object query(UTXOProvider utxoProvider, String walletId, String method, NetworkParams networkParams, Object... o) throws GenericRpcException {
     try {
-      return loadResponse(queryForStream(utxoProvider, walletId, method, o));
+      return loadResponse(queryForStream(utxoProvider, walletId, method, networkParams, o));
     } catch (IOException ex) {
       throw new RPCException(method, Arrays.deepToString(o), ex);
     }
   }
 
   @Override
-  public InputStream queryForStream(UTXOProvider utxoProvider, String walletId, String method, Object... o) throws GenericRpcException {
-    HttpURLConnection conn = setConnection(utxoProvider, walletId);
+  public InputStream queryForStream(UTXOProvider utxoProvider, String walletId, String method, NetworkParams networkParams, Object... o) throws GenericRpcException {
+    HttpURLConnection conn = setConnection(utxoProvider, walletId, networkParams);
     try {
       byte[] r = prepareRequest(method, o);
       log.info(String.format("Bitcoin JSON-RPC request:\n%s", new String(r, QUERY_CHARSET)));
@@ -228,8 +225,8 @@ public abstract class RPCClientImpl implements RPCClient {
   }
 
   @Override
-  public Object batchQuery(UTXOProvider utxoProvider, String walletId, String method, List<BatchParam> batchParams) throws GenericRpcException {
-    HttpURLConnection conn = setConnection(utxoProvider, walletId);
+  public Object batchQuery(UTXOProvider utxoProvider, String walletId, String method, List<BatchParam> batchParams, NetworkParams networkParams) throws GenericRpcException {
+    HttpURLConnection conn = setConnection(utxoProvider, walletId, networkParams);
     try {
       byte[] r = prepareBatchRequest(method, batchParams);
       log.info(String.format("Bitcoin JSON-RPC request:\n%s", new String(r, QUERY_CHARSET)));
@@ -251,10 +248,23 @@ public abstract class RPCClientImpl implements RPCClient {
     }
   }
 
-  private Pair<URL, String> getURLFromConfig(UTXOProvider provider) throws MalformedURLException {
+  private Pair<URL, String> getURLFromConfig(UTXOProvider provider, NetworkParams networkParams) throws MalformedURLException {
     URL noAuthURL;
     String authStr;
     UTXOConfigProperties.NodeConfig nodeConfig = utxoConfigProperties.getNodes().get(provider);
+
+    if (nodeConfig == null) {
+      throw new GenericRpcException("no.rpc.provider.config.found", "No provider found for " + provider.name(), 400);
+    }
+
+    if (!nodeConfig.isEnabled()) {
+      throw new GenericRpcException("rpc.provider.not.enabled", "RPC Provider is not enabled for " + provider.name(), 400);
+    }
+
+    if (nodeConfig.getNetwork() != networkParams) {
+      throw new GenericRpcException("rpc.provider.network.not.available", "RPC Provider is not available for " + networkParams.name() + " for coin " + provider.name(), 400);
+    }
+
     URL rpc = new URL(nodeConfig.getScheme() + "://" + nodeConfig.getUsername() + ":" + nodeConfig.getPassword() + "@" + nodeConfig.getHost() + ":" + nodeConfig.getPort());
     try {
       noAuthURL = new URI(rpc.getProtocol(), null, rpc.getHost(), rpc.getPort(), rpc.getPath(), rpc.getQuery(), null).toURL();
@@ -263,6 +273,6 @@ public abstract class RPCClientImpl implements RPCClient {
     }
     authStr = rpc.getUserInfo() == null ? null : String.valueOf(Base64Coder.encode(rpc.getUserInfo().getBytes(Charset.forName("ISO8859-1"))));
 
-    return  Pair.of(noAuthURL, authStr);
+    return Pair.of(noAuthURL, authStr);
   }
 }

@@ -18,6 +18,6 @@ public class CurrencyConfig extends AbstractDocument {
   @Indexed(unique = true)
   private CryptoCurrency currency;
 
-  private int numberOfConfirmationsRequired;
+  private long numberOfConfirmationsRequired;
 
 }

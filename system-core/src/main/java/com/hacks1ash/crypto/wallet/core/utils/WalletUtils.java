@@ -1,10 +1,10 @@
 package com.hacks1ash.crypto.wallet.core.utils;
 
 import com.hacks1ash.crypto.wallet.blockchain.UTXORPCClient;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.BitcoinRawTxBuilder;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.EstimateSmartFeeRequest;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.request.FundRawTransactionRequest;
-import com.hacks1ash.crypto.wallet.blockchain.bitcoin.model.response.FundRawTransactionResponse;
+import com.hacks1ash.crypto.wallet.blockchain.model.UTXORawTxBuilder;
+import com.hacks1ash.crypto.wallet.blockchain.model.request.EstimateSmartFeeRequest;
+import com.hacks1ash.crypto.wallet.blockchain.model.request.FundRawTransactionRequest;
+import com.hacks1ash.crypto.wallet.blockchain.model.response.FundRawTransactionResponse;
 import com.hacks1ash.crypto.wallet.core.model.CryptoCurrency;
 import com.hacks1ash.crypto.wallet.core.model.TransactionRecipient;
 import com.hacks1ash.crypto.wallet.core.model.request.TransactionRecipientRequest;
@@ -38,7 +38,7 @@ public class WalletUtils {
   }
 
   public static FundRawTransactionResponse fundRawTransaction(TransactionRequest request, Wallet wallet, CryptoCurrency currency, UTXORPCClient rpcClient) {
-    BitcoinRawTxBuilder bitcoinRawTxBuilder = new BitcoinRawTxBuilder(rpcClient, wallet.getNodeWalletNameAlias());
+    UTXORawTxBuilder bitcoinRawTxBuilder = new UTXORawTxBuilder(rpcClient, wallet.getNodeWalletNameAlias());
     List<Integer> subtractFeeFromOutputs = new ArrayList<>();
     for (int i = 0; i < request.getRecipients().size(); i++) {
       TransactionRecipientRequest recipient = request.getRecipients().get(i);
@@ -47,7 +47,7 @@ public class WalletUtils {
         subtractFeeFromOutputs.add(i);
       }
     }
-    String txId = bitcoinRawTxBuilder.create(currency.getUtxoProvider());
+    String txId = bitcoinRawTxBuilder.create(currency.getUtxoProvider(), currency.getNetworkParams());
     return rpcClient.fundRawTransaction(
       new FundRawTransactionRequest(
         currency.getUtxoProvider(),
@@ -66,7 +66,8 @@ public class WalletUtils {
         request.getSpeed() == null ? null : request.getSpeed().getBlockSize(),
         request.getSpeed() == null ? null : EstimateSmartFeeRequest.EstimateMode.CONSERVATIVE,
         false
-      )
+      ),
+      currency.getNetworkParams()
     );
   }
 
