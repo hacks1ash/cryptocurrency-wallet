@@ -75,6 +75,8 @@ spec:
                 secretKeyRef:
                   name: ows-core-secrets
                   key: BITCOIN_RPC_PASSWORD
+            - name: ELASTIC_APM_ENABLED
+              value: "false"
 ---
 apiVersion: v1
 kind: Service

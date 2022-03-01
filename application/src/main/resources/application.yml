@@ -62,7 +62,7 @@ utxo:
       password: ${BITCOIN_RPC_PASSWORD}
     LOCAL_LITECOIN:
       scheme: http
-      host: ${LITECOIN_RPC_HOST}
-      port: ${LITECOIN_RPC_PORT}
-      username: ${LITECOIN_RPC_USERNAME}
-      password: ${LITECOIN_RPC_PASSWORD}
+      host: ${LITECOIN_RPC_HOST:}
+      port: ${LITECOIN_RPC_PORT:}
+      username: ${LITECOIN_RPC_USERNAME:}
+      password: ${LITECOIN_RPC_PASSWORD:}
