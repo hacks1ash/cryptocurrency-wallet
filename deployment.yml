@@ -76,7 +76,25 @@ spec:
                   name: ows-core-secrets
                   key: BITCOIN_RPC_PASSWORD
             - name: ELASTIC_APM_ENABLED
-              value: "false"
+              valueFrom:
+                secretKeyRef:
+                  name: ows-core-secrets
+                  key: ELASTIC_APM_ENABLED
+            - name: BITCOIN_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  name: ows-core-secrets
+                  key: BITCOIN_ENABLED
+            - name: BITCOIN_NETWORK
+              valueFrom:
+                secretKeyRef:
+                  name: ows-core-secrets
+                  key: BITCOIN_NETWORK
+            - name: LITECOIN_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  name: ows-core-secrets
+                  key: LITECOIN_ENABLED
 ---
 apiVersion: v1
 kind: Service
