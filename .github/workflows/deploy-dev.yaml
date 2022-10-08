@@ -1,4 +1,4 @@
-name: Deploy Main
+name: Deploy To Dev Cluster
 on:
   push:
     branches:
