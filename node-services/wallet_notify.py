@@ -1,14 +1,12 @@
 import argparse
-import random
-import time
-
-import requests
-import json
-import subprocess
 import logging
-import settings
-from threading import Thread
 import os
+import random
+import requests
+import time
+from threading import Thread
+
+import settings
 
 logging.basicConfig(filename=os.path.join(settings.LOG_PATH, "wallet-notify.log"),
                     filemode='a',
@@ -16,101 +14,54 @@ logging.basicConfig(filename=os.path.join(settings.LOG_PATH, "wallet-notify.log"
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.DEBUG)
 
-logger = logging.getLogger("cwsSocketServer")
+logger = logging.getLogger("odradekPaySocketServer")
 
 parser = argparse.ArgumentParser(description='Wallet notify script')
 
 parser.add_argument("txid", metavar='N', type=str, nargs='+', help='txid which changed')
+parser.add_argument("wallet_name", metavar='N', type=str, nargs='+', help='wallet name')
+parser.add_argument("block_height", metavar='N', type=str, nargs='+',
+                    help="tranasction blockheigh -1 if transaction is not confirmed")
 
 args = parser.parse_args()
 txids = args.txid
+wallet_names = args.wallet_name
+block_heights = args.block_height
 txid = None
+wallet_name = None
+block_height = None
 
 if txids:
     txid = txids[0]
+if wallet_names:
+    wallet_name = wallet_names[0]
+if block_heights:
+    block_height = block_heights[0]
 
 script_id = random.randint(1000000, 1000000000)
 logger.info(f"<======================== STARTING EXECUTING SCRIPT <{script_id}> =============================>\n\n\n\n")
 
-tx_hex = subprocess.Popen(
-    [f"{settings.COIN_NAME} -conf={settings.CONF_PATH} getrawtransaction {txid} true"],
-    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-raw_transaction, err = tx_hex.communicate(b"")
+data_to_send = {"blockHeight": block_height, "walletName": wallet_name, "txId": txid, "coin": settings.COIN_TICKER}
 
-json_data = json.loads(raw_transaction)
-block_hash = json_data.get("blockhash")
-block_height = -1
-addresses = list()
-
-if block_hash:
-    block_data = subprocess.Popen(
-        [f"{settings.COIN_NAME} -conf={settings.CONF_PATH} getblock {block_hash} 1"],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    block_json, err = block_data.communicate(b"")
-    block_json = json.loads(block_json)
-    block_height = block_json.get("height")
-    logger.info(f"BLOCK HEIGHT: {block_height}")
-
-logger.info(json_data)
-try:
-    vins = json_data.get("vin")
-
-    for vin in vins:
-        v_txid = vin.get("txid")
-        vout_index = vin.get("vout")
-        tx_hex = subprocess.Popen(
-            [f"{settings.COIN_NAME} -conf={settings.CONF_PATH} getrawtransaction {v_txid} true"],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        raw_transaction, err = tx_hex.communicate(b"")
-        json_data_v = json.loads(raw_transaction)
-        vouts_v = json_data_v.get("vout")
-        output = vouts_v[int(vout_index)]
-        addresses.append(output.get("scriptPubKey").get("address"))
-
-except Exception as e:
-    logger.info(e)
-
-try:
-    vouts = json_data.get("vout")
-
-    for vout in vouts:
-        scr = vout.get("scriptPubKey")
-        address = scr.get("address")
-        addresses.append(address)
-
-except Exception as e:
-    logger.info(e)
-
-data_to_send = dict()
-data_to_send['txid'] = txid
-data_to_send['addresses'] = list(set(addresses))
-data_to_send['blockHeight'] = block_height
-data_to_send['coin'] = settings.COIN_TICKER
-
-
-def post_notification(url_param):
+def post_notification(notify_url):
     sleep_time = 30
     tries = 0
     while tries < 5:
         tries += 1
+        request_url = notify_url
         try:
-            logger.info(f"SENDING REQUEST TO : {url_param} \t DATA: {data_to_send}")
-            response = requests.post(url_param, json=data_to_send)
-        except Exception as ex:
-            logger.info(
-                f"Occured exception while sending request to url {url_param}, data: {data_to_send}, reason {ex}")
+            response = requests.post(request_url, json=data_to_send)
+        except Exception as _:
+            logger.info(f"Occured exception while sending request : {request_url}")
             logger.info("Next request after 30 seconds")
             time.sleep(sleep_time)
             sleep_time += 30
         else:
             if int(response.status_code) == 200:
-                logger.info(f"Webhook successfully send to {url_param} for txid {data_to_send.get('txid')}")
+                logger.info(f"Sent webhook data to {request_url}")
                 break
             else:
-                logger.info(
-                    f"Webhook handler {url_param} didn't returned status code 200 for txid {txid},"
-                    f" reason : {response.content}"
-                )
+                logger.info(f"Handler didn't returned status code 200, reason : {response.content}")
                 time.sleep(sleep_time)
                 sleep_time += 30
 

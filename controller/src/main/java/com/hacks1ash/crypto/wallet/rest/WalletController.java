@@ -52,7 +52,7 @@ public class WalletController {
 
   @Operation(
     method = "listWallets",
-    summary = "Get wallets ",
+    summary = "Get wallets",
     responses = {
       @ApiResponse(responseCode = "200", description = "Wallets", content = @Content(array = @ArraySchema(schema = @Schema(implementation = WalletResponse.class)))),
       @ApiResponse(responseCode = "500", description = "Something unexpected happened", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -99,7 +99,7 @@ public class WalletController {
       )
     ),
     responses = {
-      @ApiResponse(responseCode = "200", description = "Address", content = @Content(schema = @Schema(implementation = RequestMapping.class))),
+      @ApiResponse(responseCode = "200", description = "Address", content = @Content(schema = @Schema(implementation = AddressResponse.class))),
       @ApiResponse(responseCode = "400", description = "Invalid parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
       @ApiResponse(responseCode = "404", description = "Unable to find wallet", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
       @ApiResponse(responseCode = "500", description = "Something unexpected happened", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),

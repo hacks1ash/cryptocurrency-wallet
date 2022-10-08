@@ -1,9 +1,17 @@
-FROM openjdk:11.0-jre-slim-buster
-WORKDIR /opt
-COPY elastic-apm-agent-1.28.4.jar /opt/elastic-apm.jar
-COPY ./.build/application/libs/application.jar /opt/app.jar
-ENTRYPOINT exec java $JAVA_OPTS \
-    -Djdk.tls.client.protocols=TLSv1.2 \
-    -Duser.timezone=UTC \
-    -javaagent:elastic-apm.jar \
-    -jar app.jar
+# Gradle Build
+FROM public.ecr.aws/bitnami/java:11 as gradle
+WORKDIR /app
+COPY . .
+RUN ./gradlew build
+
+FROM public.ecr.aws/bitnami/java:11 as builder
+WORKDIR /app
+COPY --from=gradle /app/.build/application/libs/application.jar ./app.jar
+RUN java -Djarmode=layertools -jar ./app.jar extract
+
+FROM public.ecr.aws/bitnami/java:11
+COPY --from=builder /app/dependencies/ ./
+COPY --from=builder /app/snapshot-dependencies/ ./
+COPY --from=builder /app/spring-boot-loader/ ./
+COPY --from=builder /app/application/ ./
+ENTRYPOINT exec java $JAVA_OPTS -Djdk.tls.client.protocols=TLSv1.2 -Duser.timezone=UTC org.springframework.boot.loader.JarLauncher

@@ -1,14 +1,14 @@
 import argparse
-import random
-import time
-
-import requests
 import json
-import subprocess
 import logging
-import settings
-from threading import Thread
 import os
+import random
+import requests
+import subprocess
+import time
+from threading import Thread
+
+import settings
 
 logging.basicConfig(filename=os.path.join(settings.LOG_PATH, "block-notify.log"),
                     filemode='a',
@@ -16,7 +16,7 @@ logging.basicConfig(filename=os.path.join(settings.LOG_PATH, "block-notify.log")
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.DEBUG)
 
-logger = logging.getLogger("cwsSocketServer")
+logger = logging.getLogger("odradekPaySocketServer")
 
 parser = argparse.ArgumentParser(description='Block notify script')
 

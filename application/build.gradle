@@ -4,6 +4,11 @@ plugins {
 
 bootJar {
     mainClass.set("com.hacks1ash.crypto.wallet.RestApplication")
+
+    layered {
+        enabled = true
+        includeLayerTools = true
+    }
 }
 
 dependencies {

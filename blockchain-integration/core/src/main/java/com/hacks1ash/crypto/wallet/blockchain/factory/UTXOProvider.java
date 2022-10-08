@@ -6,7 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum UTXOProvider {
-
   BITCOIN,
   LITECOIN,
   BITCOIN_CASH;

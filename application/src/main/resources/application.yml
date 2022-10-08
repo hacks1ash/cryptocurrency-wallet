@@ -29,7 +29,7 @@ graphiql:
 spring:
   data:
     mongodb:
-      uri: ${DATABASE_URL_SCHEMA}://${DATABASE_USER}:${DATABASE_PASS}@${DATABASE_HOST}/${DATABASE_NAME}?retryWrites=true&w=majority
+      uri: ${DATABASE_URL_SCHEMA}://${DATABASE_USER}:${DATABASE_PASS}@${DATABASE_HOST}/${DATABASE_NAME}${DATABASE_CONN_PARAMS:}
       auto-index-creation: false
   application:
     name: "CryptoCurrency Wallet"

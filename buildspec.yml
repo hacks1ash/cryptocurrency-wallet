@@ -34,5 +34,11 @@ phases:
       - aws eks update-kubeconfig --name $EKS_NAME
       - kubectl apply -f deployment.yml
       - printf '[{"name":"ows-core-deployment","imageUri":"%s","buildNumber":"$CODEBUILD_BUILD_NUMBER"}]' $REPOSITORY_URI:$TAG > build.json
+
+cache:
+  paths:
+    - '/root/.m2/**/*'
+    - '/root/.gradle/caches/**/*'
+
 artifacts:
   files: build.json

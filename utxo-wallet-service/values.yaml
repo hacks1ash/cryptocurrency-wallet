@@ -1,0 +1,101 @@
+replicaCount: 1
+
+image:
+  repository: 977657838404.dkr.ecr.us-east-1.amazonaws.com/utxo-wallet
+  pullPolicy: Always
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::977657838404:role/sercrets-manager-k8s-role
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+secrets:
+  objectName: dev/utxo-service
+  objects:
+    - path: database_url_schema
+      objectAlias: databaseURLSchema
+    - path: database_user
+      objectAlias: databaseUser
+    - path: database_pass
+      objectAlias: databasePass
+    - path: database_host
+      objectAlias: databaseHost
+    - path: database_name
+      objectAlias: databaseName
+    - path: database_conn_params
+      objectAlias: databaseConnParams
+    - path: bitcoin_enabled
+      objectAlias: bitcoinEnabled
+    - path: bitcoin_rpc_host
+      objectAlias: bitcoinRPCHost
+    - path: bitcoin_rpc_port
+      objectAlias: bitcoinRPCPort
+    - path: bitcoin_rpc_username
+      objectAlias: bitcoinRPCUsername
+    - path: bitcoin_rpc_password
+      objectAlias: bitcoinRPCPassword
+    - path: bitcoin_network
+      objectAlias: bitcoinNetwork
+    - path: litecoin_enabled
+      objectAlias: litecoinEnabled
+    - path: litecoin_rpc_host
+      objectAlias: litecoinRPCHost
+    - path: litecoin_rpc_port
+      objectAlias: litecoinRPCPort
+    - path: litecoin_rpc_username
+      objectAlias: litecoinRPCUsername
+    - path: litecoin_rpc_password
+      objectAlias: litecoinRPCPassword
+    - path: litecoin_network
+      objectAlias: litecoinNetwork
+  env:
+    - objectName: databaseURLSchema
+      key: DATABASE_URL_SCHEMA
+    - objectName: databaseUser
+      key: DATABASE_USER
+    - objectName: databasePass
+      key: DATABASE_PASS
+    - objectName: databaseHost
+      key: DATABASE_HOST
+    - objectName: databaseName
+      key: DATABASE_NAME
+    - objectName: databaseConnParams
+      key: DATABASE_CONN_PARAMS
+    - objectName: bitcoinEnabled
+      key: BITCOIN_ENABLED
+    - objectName: bitcoinRPCHost
+      key: BITCOIN_RPC_HOST
+    - objectName: bitcoinRPCPort
+      key: BITCOIN_RPC_PORT
+    - objectName: bitcoinRPCUsername
+      key: BITCOIN_RPC_USERNAME
+    - objectName: bitcoinRPCPassword
+      key: BITCOIN_RPC_PASSWORD
+    - objectName: bitcoinNetwork
+      key: BITCOIN_NETWORK
+    - objectName: litecoinEnabled
+      key: LITECOIN_ENABLED
+    - objectName: litecoinRPCHost
+      key: LITECOIN_RPC_HOST
+    - objectName: litecionRPCPort
+      key: LITECOIN_RPC_PORT
+    - objectName: litecoinRPCUsername
+      key: LITECOIN_RPC_USERNAME
+    - objectName: litecoinRPCPassword
+      key: LITECOIN_RPC_PASSWORD
+    - objectName: litecoinNetwork
+      key: LITECOIN_NETWORK

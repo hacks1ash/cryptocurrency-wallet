@@ -77,8 +77,6 @@ public class WalletManagerBean implements WalletManager {
         throw new WalletException(ex.getErrorKey(), ex.getErrorMessage(), ex.getErrorCode());
       }
 
-
-
       AddressWithPrivate address = addressManager.createAddress(hdSeed, AddressType.BECH_32, cryptoCurrency.getNetworkParams(), 0, creationTimestamp);
 
       rpcClient.importMulti(
